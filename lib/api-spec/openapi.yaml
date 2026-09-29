@@ -1,0 +1,1317 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: LANDSAFE - Land Stability and Safety Framework API
+security:
+  - bearerAuth: []
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: dashboard
+    description: Dashboard and KPI data
+  - name: locations
+    description: Monitoring locations
+  - name: sensors
+    description: Sensors
+  - name: measurements
+    description: Sensor measurements
+  - name: alerts
+    description: Alert events
+  - name: devices
+    description: Hardware devices
+  - name: ai
+    description: AI Risk Analysis
+  - name: reports
+    description: Report generation
+  - name: users
+    description: User management
+  - name: audit
+    description: Audit logs
+
+paths:
+  /healthz:
+    get:
+      security: []
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      security: []
+      operationId: login
+      tags: [auth]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+
+  /auth/change-password:
+    post:
+      operationId: changePassword
+      tags: [auth]
+      summary: Change current user's password and revoke existing tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordInput"
+      responses:
+        "200":
+          description: Password changed
+        "400":
+          description: Invalid new password
+        "401":
+          description: Current password incorrect or unauthorized
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get KPI statistics
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/activity:
+    get:
+      operationId: getDashboardActivity
+      tags: [dashboard]
+      summary: Get recent activity feed
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /dashboard/risk-summary:
+    get:
+      operationId: getDashboardRiskSummary
+      tags: [dashboard]
+      summary: Get risk level breakdown by location
+      responses:
+        "200":
+          description: Risk summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskSummary"
+
+  /locations:
+    get:
+      operationId: getLocations
+      tags: [locations]
+      summary: List all monitoring locations
+      responses:
+        "200":
+          description: Locations list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Location"
+    post:
+      operationId: createLocation
+      tags: [locations]
+      summary: Create location
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+
+  /locations/{id}:
+    get:
+      operationId: getLocation
+      tags: [locations]
+      summary: Get location by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Location
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+    patch:
+      operationId: updateLocation
+      tags: [locations]
+      summary: Update location
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+    delete:
+      operationId: deleteLocation
+      tags: [locations]
+      summary: Delete location
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /sensors:
+    get:
+      operationId: getSensors
+      tags: [sensors]
+      summary: List sensors
+      parameters:
+        - name: locationId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Sensors list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Sensor"
+    post:
+      operationId: createSensor
+      tags: [sensors]
+      summary: Create sensor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SensorInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sensor"
+
+  /sensors/{id}:
+    get:
+      operationId: getSensor
+      tags: [sensors]
+      summary: Get sensor by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Sensor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sensor"
+    patch:
+      operationId: updateSensor
+      tags: [sensors]
+      summary: Update sensor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SensorUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sensor"
+    delete:
+      operationId: deleteSensor
+      tags: [sensors]
+      summary: Delete sensor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /sensors/{id}/readings:
+    get:
+      operationId: getSensorReadings
+      tags: [sensors]
+      summary: Get time-series readings for a sensor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: from
+          in: query
+          schema:
+            type: string
+        - name: to
+          in: query
+          schema:
+            type: string
+        - name: resolution
+          in: query
+          schema:
+            type: string
+            enum: [raw, hourly, daily]
+            default: raw
+      responses:
+        "200":
+          description: Sensor readings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Measurement"
+
+  /measurements:
+    get:
+      operationId: getMeasurements
+      tags: [measurements]
+      summary: Query measurements with filters
+      parameters:
+        - name: locationId
+          in: query
+          schema:
+            type: integer
+        - name: sensorId
+          in: query
+          schema:
+            type: integer
+        - name: from
+          in: query
+          schema:
+            type: string
+        - name: to
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        "200":
+          description: Measurements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Measurement"
+    post:
+      security:
+        - bearerAuth: []
+        - sensorToken: []
+      operationId: createMeasurement
+      tags: [measurements]
+      summary: Ingest a sensor measurement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeasurementInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Measurement"
+
+  /alerts:
+    get:
+      operationId: getAlerts
+      tags: [alerts]
+      summary: List alerts
+      parameters:
+        - name: locationId
+          in: query
+          schema:
+            type: integer
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [critical, high, medium, low]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, acknowledged, resolved]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Alerts list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alert"
+
+  /alerts/{id}:
+    get:
+      operationId: getAlert
+      tags: [alerts]
+      summary: Get alert by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Alert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alert"
+    patch:
+      operationId: updateAlert
+      tags: [alerts]
+      summary: Update alert status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlertUpdate"
+      responses:
+        "200":
+          description: Updated alert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alert"
+
+  /devices:
+    get:
+      operationId: getDevices
+      tags: [devices]
+      summary: List devices
+      responses:
+        "200":
+          description: Devices list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Device"
+    post:
+      operationId: createDevice
+      tags: [devices]
+      summary: Create device
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+
+  /devices/{id}:
+    get:
+      operationId: getDevice
+      tags: [devices]
+      summary: Get device by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Device
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+    patch:
+      operationId: updateDevice
+      tags: [devices]
+      summary: Update device
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceUpdate"
+      responses:
+        "200":
+          description: Updated device
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+    delete:
+      operationId: deleteDevice
+      tags: [devices]
+      summary: Delete device
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /ai/risk-analysis:
+    get:
+      operationId: getRiskAnalysisList
+      tags: [ai]
+      summary: Get risk analysis for all locations
+      responses:
+        "200":
+          description: Risk analyses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RiskAnalysis"
+
+  /ai/risk-analysis/{locationId}:
+    get:
+      operationId: getRiskAnalysis
+      tags: [ai]
+      summary: Get AI risk analysis for a location
+      parameters:
+        - name: locationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Risk analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskAnalysis"
+
+  /reports:
+    get:
+      operationId: getReports
+      tags: [reports]
+      summary: List generated reports
+      responses:
+        "200":
+          description: Reports list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Report"
+    post:
+      operationId: generateReport
+      tags: [reports]
+      summary: Generate a new report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportInput"
+      responses:
+        "201":
+          description: Report created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+
+  /users:
+    get:
+      operationId: getUsers
+      tags: [users]
+      summary: List users (admin only)
+      responses:
+        "200":
+          description: Users list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create user (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}:
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update user (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Delete user (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /audit:
+    get:
+      operationId: getAuditLogs
+      tags: [audit]
+      summary: Get audit logs (admin only)
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: userId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Audit logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditLog"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    sensorToken:
+      type: apiKey
+      in: header
+      name: x-sensor-token
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        rememberMe:
+          type: boolean
+
+    ChangePasswordInput:
+      type: object
+      additionalProperties: false
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+          minLength: 12
+
+    AuthResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    User:
+      type: object
+      required: [id, email, name, role, createdAt]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [public, operator, admin]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+        lastLogin:
+          type: ["string", "null"]
+
+    UserInput:
+      type: object
+      required: [email, name, role, password]
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [public, operator, admin]
+        password:
+          type: string
+
+    UserUpdate:
+      type: object
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [public, operator, admin]
+        isActive:
+          type: boolean
+        password:
+          type: string
+
+    DashboardStats:
+      type: object
+      required:
+        - totalSensors
+        - onlineSensors
+        - offlineSensors
+        - highRiskLocations
+        - activeWarnings
+        - normalLocations
+        - avgRainfall
+        - avgSoilMoisture
+        - systemHealth
+        - dbStatus
+        - aiEngineStatus
+        - networkStatus
+      properties:
+        totalSensors:
+          type: integer
+        onlineSensors:
+          type: integer
+        offlineSensors:
+          type: integer
+        highRiskLocations:
+          type: integer
+        activeWarnings:
+          type: integer
+        normalLocations:
+          type: integer
+        avgRainfall:
+          type: number
+        avgSoilMoisture:
+          type: number
+        systemHealth:
+          type: string
+          enum: [healthy, degraded, critical]
+        dbStatus:
+          type: string
+          enum: [connected, disconnected]
+        aiEngineStatus:
+          type: string
+          enum: [active, inactive, error]
+        networkStatus:
+          type: string
+          enum: [stable, unstable, down]
+
+    ActivityItem:
+      type: object
+      required: [id, type, message, priority, timestamp]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [alert, sensor_offline, battery_low, rainfall_warning, ground_movement, earthquake, notification_sent, threshold_exceeded]
+        message:
+          type: string
+        priority:
+          type: string
+          enum: [critical, high, medium, low, info]
+        locationName:
+          type: ["string", "null"]
+        timestamp:
+          type: string
+
+    RiskSummary:
+      type: object
+      required: [danger, alert, watch, normal]
+      properties:
+        danger:
+          type: integer
+        alert:
+          type: integer
+        watch:
+          type: integer
+        normal:
+          type: integer
+        trend:
+          type: string
+          enum: [improving, stable, worsening]
+
+    Location:
+      type: object
+      required: [id, name, district, province, latitude, longitude, riskLevel, status, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        district:
+          type: string
+        province:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        elevation:
+          type: ["number", "null"]
+        riskLevel:
+          type: string
+          enum: [normal, watch, alert, danger]
+        status:
+          type: string
+          enum: [active, inactive, maintenance]
+        description:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    LocationInput:
+      type: object
+      required: [name, district, province, latitude, longitude]
+      properties:
+        name:
+          type: string
+        district:
+          type: string
+        province:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        elevation:
+          type: number
+        description:
+          type: string
+
+    LocationUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        district:
+          type: string
+        province:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        elevation:
+          type: number
+        riskLevel:
+          type: string
+          enum: [normal, watch, alert, danger]
+        status:
+          type: string
+          enum: [active, inactive, maintenance]
+        description:
+          type: string
+
+    Sensor:
+      type: object
+      required: [id, locationId, sensorCode, sensorType, status, batteryLevel, signalStrength, createdAt]
+      properties:
+        id:
+          type: integer
+        locationId:
+          type: integer
+        locationName:
+          type: ["string", "null"]
+        sensorCode:
+          type: string
+        sensorType:
+          type: string
+          enum: [rainfall, soil_moisture, tilt, acceleration, temperature, humidity, battery_voltage, solar_charging, all_in_one]
+        status:
+          type: string
+          enum: [online, offline, maintenance, calibration]
+        batteryLevel:
+          type: number
+        signalStrength:
+          type: number
+        firmwareVersion:
+          type: ["string", "null"]
+        lastSeen:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    SensorInput:
+      type: object
+      required: [locationId, sensorCode, sensorType]
+      properties:
+        locationId:
+          type: integer
+        sensorCode:
+          type: string
+        sensorType:
+          type: string
+          enum: [rainfall, soil_moisture, tilt, acceleration, temperature, humidity, battery_voltage, solar_charging, all_in_one]
+        firmwareVersion:
+          type: string
+
+    SensorUpdate:
+      type: object
+      properties:
+        sensorCode:
+          type: string
+        sensorType:
+          type: string
+          enum: [rainfall, soil_moisture, tilt, acceleration, temperature, humidity, battery_voltage, solar_charging, all_in_one]
+        status:
+          type: string
+          enum: [online, offline, maintenance, calibration]
+        firmwareVersion:
+          type: string
+
+    Measurement:
+      type: object
+      required: [id, sensorId, timestamp]
+      properties:
+        id:
+          type: integer
+        sensorId:
+          type: integer
+        locationId:
+          type: ["integer", "null"]
+        timestamp:
+          type: string
+        rainfall:
+          type: ["number", "null"]
+        soilMoisture:
+          type: ["number", "null"]
+        tiltAngle:
+          type: ["number", "null"]
+        acceleration:
+          type: ["number", "null"]
+        temperature:
+          type: ["number", "null"]
+        humidity:
+          type: ["number", "null"]
+        batteryVoltage:
+          type: ["number", "null"]
+        solarCharging:
+          type: ["number", "null"]
+        signalQuality:
+          type: ["number", "null"]
+
+    MeasurementInput:
+      type: object
+      required: [sensorId, timestamp]
+      properties:
+        sensorId:
+          type: integer
+        timestamp:
+          type: string
+        rainfall:
+          type: number
+        soilMoisture:
+          type: number
+        tiltAngle:
+          type: number
+        acceleration:
+          type: number
+        temperature:
+          type: number
+        humidity:
+          type: number
+        batteryVoltage:
+          type: number
+        solarCharging:
+          type: number
+        signalQuality:
+          type: number
+
+    Alert:
+      type: object
+      required: [id, locationId, alertType, priority, status, message, createdAt]
+      properties:
+        id:
+          type: integer
+        locationId:
+          type: integer
+        locationName:
+          type: ["string", "null"]
+        alertType:
+          type: string
+          enum: [threshold_exceeded, rainfall_warning, sensor_offline, battery_low, ground_movement, earthquake, emergency_notification]
+        priority:
+          type: string
+          enum: [critical, high, medium, low]
+        status:
+          type: string
+          enum: [active, acknowledged, resolved]
+        message:
+          type: string
+        operatorId:
+          type: ["integer", "null"]
+        operatorName:
+          type: ["string", "null"]
+        acknowledgedAt:
+          type: ["string", "null"]
+        resolvedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    AlertUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [acknowledged, resolved]
+        operatorNote:
+          type: string
+
+    Device:
+      type: object
+      required: [id, deviceId, locationId, status, batteryLevel, signalStrength, lastCommunication, createdAt]
+      properties:
+        id:
+          type: integer
+        deviceId:
+          type: string
+        locationId:
+          type: integer
+        locationName:
+          type: ["string", "null"]
+        firmwareVersion:
+          type: string
+        status:
+          type: string
+          enum: [online, offline, maintenance, calibration]
+        batteryLevel:
+          type: number
+        signalStrength:
+          type: number
+        lastCommunication:
+          type: string
+        installationDate:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    DeviceInput:
+      type: object
+      required: [deviceId, locationId]
+      properties:
+        deviceId:
+          type: string
+        locationId:
+          type: integer
+        firmwareVersion:
+          type: string
+        installationDate:
+          type: string
+        notes:
+          type: string
+
+    DeviceUpdate:
+      type: object
+      properties:
+        firmwareVersion:
+          type: string
+        status:
+          type: string
+          enum: [online, offline, maintenance, calibration]
+        notes:
+          type: string
+
+    RiskAnalysis:
+      type: object
+      required: [locationId, locationName, riskLevel, probability, confidence, analyzedAt]
+      properties:
+        locationId:
+          type: integer
+        locationName:
+          type: string
+        riskLevel:
+          type: string
+          enum: [normal, watch, alert, danger]
+        probability:
+          type: number
+        confidence:
+          type: number
+        potentialTriggers:
+          type: array
+          items:
+            type: string
+        historicalSimilarEvents:
+          type: integer
+        recommendedActions:
+          type: array
+          items:
+            type: string
+        evacuationSuggested:
+          type: boolean
+        explanation:
+          type: string
+        analyzedAt:
+          type: string
+
+    Report:
+      type: object
+      required: [id, reportType, period, status, createdAt]
+      properties:
+        id:
+          type: integer
+        reportType:
+          type: string
+          enum: [daily, weekly, monthly, annual]
+        title:
+          type: string
+        period:
+          type: string
+        status:
+          type: string
+          enum: [generating, ready, failed]
+        locationId:
+          type: ["integer", "null"]
+        locationName:
+          type: ["string", "null"]
+        generatedBy:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+        completedAt:
+          type: ["string", "null"]
+
+    ReportInput:
+      type: object
+      required: [reportType, period]
+      properties:
+        reportType:
+          type: string
+          enum: [daily, weekly, monthly, annual]
+        period:
+          type: string
+        locationId:
+          type: integer
+        title:
+          type: string
+
+    AuditLog:
+      type: object
+      required: [id, userId, action, entityType, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        userName:
+          type: ["string", "null"]
+        action:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: ["integer", "null"]
+        details:
+          type: ["string", "null"]
+        ipAddress:
+          type: ["string", "null"]
+        createdAt:
+          type: string

@@ -1,0 +1,21 @@
+{
+  "modelType": "xgboost-bootstrap-demo",
+  "productionReady": false,
+  "featureNames": [
+    "elevation",
+    "sample_count",
+    "rainfall_avg",
+    "rainfall_max",
+    "soil_moisture_avg",
+    "soil_moisture_max",
+    "tilt_angle_avg",
+    "tilt_angle_max",
+    "acceleration_avg",
+    "acceleration_max",
+    "temperature_avg",
+    "humidity_avg",
+    "signal_quality_avg"
+  ],
+  "trainingRows": 2500,
+  "warning": "Replace with a model trained and validated on labeled landslide events."
+}
