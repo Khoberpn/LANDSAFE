@@ -1,5 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { initLiaDatabase } from "./lib/lia/db-init";
+import { syncEngine } from "./integrations/sync-engine";
 
 const rawPort = process.env["PORT"];
 
@@ -14,6 +16,14 @@ const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
+
+initLiaDatabase().catch((err) => {
+  logger.warn({ err: err.message }, "Background LIA database init warning");
+});
+
+syncEngine.start().catch((err) => {
+  logger.warn({ err: err.message }, "Background government data sync engine init warning");
+});
 
 app.listen(port, (err) => {
   if (err) {

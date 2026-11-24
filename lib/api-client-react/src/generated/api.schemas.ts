@@ -603,6 +603,1033 @@ export interface AuditLog {
   createdAt: string;
 }
 
+export interface IndicatorItem {
+  label: string;
+  value: number;
+}
+
+export interface RiskIndicators {
+  hazard: IndicatorItem[];
+  exposure: IndicatorItem[];
+  vulnerability: IndicatorItem[];
+  capacity: IndicatorItem[];
+}
+
+export interface RiskAssessment {
+  id: number;
+  regionName: string;
+  /** @nullable */
+  regionCode?: string | null;
+  province: string;
+  latitude: number;
+  longitude: number;
+  extentKm?: number;
+  hazardType: string;
+  hazardIndex: number;
+  exposureIndex: number;
+  vulnerabilityIndex: number;
+  capacityIndex: number;
+  riskScore: number;
+  riskClass: string;
+  population: number;
+  exposedPopulation: number;
+  exposedFacilities: number;
+  exposedRoadsKm: number;
+  indicators?: RiskIndicators;
+  sources?: string[];
+  verified: boolean;
+  /** @nullable */
+  verifiedAt?: string | null;
+  assessedAt: string;
+}
+
+export type RegionalRiskSummaryByClass = {
+  low?: number;
+  moderate?: number;
+  high?: number;
+  extreme?: number;
+};
+
+export type RegionalRiskSummaryByHazardItem = {
+  hazardType?: string;
+  count?: number;
+  averageRiskScore?: number;
+};
+
+export type RegionalRiskSummaryWeights = {
+  hazard?: number;
+  exposure?: number;
+  vulnerability?: number;
+  capacity?: number;
+};
+
+export interface RegionalRiskSummary {
+  totalAssessments: number;
+  verifiedAssessments: number;
+  regionsCovered: number;
+  provinces?: string[];
+  averageRiskScore: number;
+  averageHazard?: number;
+  averageExposure?: number;
+  averageVulnerability?: number;
+  averageCapacity?: number;
+  byClass: RegionalRiskSummaryByClass;
+  byHazard: RegionalRiskSummaryByHazardItem[];
+  exposedPopulation: number;
+  exposedFacilities: number;
+  exposedRoadsKm?: number;
+  /** @nullable */
+  lastAssessedAt?: string | null;
+  weights?: RegionalRiskSummaryWeights;
+}
+
+export interface RiskRanking {
+  rank: number;
+  id: number;
+  regionName: string;
+  province: string;
+  hazardType: string;
+  riskScore: number;
+  riskClass: string;
+  exposedPopulation?: number;
+  verified?: boolean;
+}
+
+export interface VerifyAssessmentInput {
+  verified: boolean;
+  /** @nullable */
+  note?: string | null;
+}
+
+export type ScenarioParametersSeason = typeof ScenarioParametersSeason[keyof typeof ScenarioParametersSeason];
+
+
+export const ScenarioParametersSeason = {
+  dry: 'dry',
+  transition: 'transition',
+  wet: 'wet',
+} as const;
+
+export type ScenarioParametersTimeOfDay = typeof ScenarioParametersTimeOfDay[keyof typeof ScenarioParametersTimeOfDay];
+
+
+export const ScenarioParametersTimeOfDay = {
+  day: 'day',
+  night: 'night',
+} as const;
+
+export interface ScenarioParameters {
+  intensity: number;
+  durationHours: number;
+  rainfallMm: number;
+  season: ScenarioParametersSeason;
+  timeOfDay: ScenarioParametersTimeOfDay;
+  warningLeadTimeHours: number;
+}
+
+export interface ScenarioSectorImpact {
+  sector: string;
+  impact: number;
+  note: string;
+}
+
+export interface ScenarioReliefNeed {
+  category: string;
+  quantity: number;
+  unit: string;
+}
+
+export interface ScenarioResponsePhase {
+  phase: string;
+  window: string;
+  focus: string;
+}
+
+export type ScenarioResultsImpactLevel = typeof ScenarioResultsImpactLevel[keyof typeof ScenarioResultsImpactLevel];
+
+
+export const ScenarioResultsImpactLevel = {
+  limited: 'limited',
+  moderate: 'moderate',
+  severe: 'severe',
+  critical: 'critical',
+} as const;
+
+export interface ScenarioResults {
+  affectedPopulation: number;
+  affectedVulnerableGroups: number;
+  displacedPopulation: number;
+  medicalNeeds: number;
+  affectedFacilities: number;
+  affectedRoadsKm: number;
+  economicLossIdrBillion: number;
+  impactLevel: ScenarioResultsImpactLevel;
+  sectorImpacts: ScenarioSectorImpact[];
+  reliefNeeds: ScenarioReliefNeed[];
+  responsePhases: ScenarioResponsePhase[];
+  modelNotes: string[];
+}
+
+export interface Scenario {
+  id: number;
+  name: string;
+  hazardType: string;
+  assessmentId: number;
+  regionName: string;
+  parameters: ScenarioParameters;
+  results: ScenarioResults;
+  status?: string;
+  /** @nullable */
+  notes?: string | null;
+  isSimulation?: boolean;
+  createdAt: string;
+}
+
+export interface CreateScenarioInput {
+  name: string;
+  assessmentId: number;
+  parameters: ScenarioParameters;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface CompareScenariosInput {
+  scenarioIds: number[];
+}
+
+export interface ScenarioComparisonValue {
+  scenarioId: number;
+  name: string;
+  regionName: string;
+  value: number;
+}
+
+export interface ScenarioComparisonMetric {
+  key: string;
+  label: string;
+  unit: string;
+  higherIsWorse: boolean;
+  values: ScenarioComparisonValue[];
+}
+
+export interface ScenarioComparison {
+  scenarios: Scenario[];
+  metrics: ScenarioComparisonMetric[];
+}
+
+export interface DataSource {
+  id: number;
+  code: string;
+  name: string;
+  agency: string;
+  category: string;
+  integrationType: string;
+  status: string;
+  /** @nullable */
+  endpointUrl?: string | null;
+  updateFrequency: string;
+  /** @nullable */
+  lastSyncAt?: string | null;
+  /** @nullable */
+  lastSyncStatus?: string | null;
+  recordsAvailable: number;
+  completeness: number;
+  duplicateRate: number;
+  /** @nullable */
+  owner?: string | null;
+  /** @nullable */
+  description?: string | null;
+  isSimulated: boolean;
+}
+
+export interface UpdateDataSourceInput {
+  status?: string;
+  description?: string;
+  updateFrequency?: string;
+}
+
+export type SyncResultOutcome = typeof SyncResultOutcome[keyof typeof SyncResultOutcome];
+
+
+export const SyncResultOutcome = {
+  synced: 'synced',
+  simulated: 'simulated',
+  unavailable: 'unavailable',
+} as const;
+
+export interface SyncResult {
+  outcome: SyncResultOutcome;
+  message: string;
+  recordsProcessed?: number;
+  durationMs?: number;
+  source: DataSource;
+}
+
+export interface IntegrationLogEntry {
+  id: number;
+  sourceId: number;
+  sourceName?: string;
+  level: string;
+  event: string;
+  message: string;
+  recordsProcessed?: number;
+  invalidRecords?: number;
+  /** @nullable */
+  durationMs?: number | null;
+  createdAt: string;
+}
+
+export type DataQualityCheckStatus = typeof DataQualityCheckStatus[keyof typeof DataQualityCheckStatus];
+
+
+export const DataQualityCheckStatus = {
+  pass: 'pass',
+  warn: 'warn',
+  fail: 'fail',
+} as const;
+
+export interface DataQualityCheck {
+  id: string;
+  label: string;
+  status: DataQualityCheckStatus;
+  detail: string;
+  affected: number;
+}
+
+export interface DataQualityDataset {
+  sourceId: number;
+  code: string;
+  name: string;
+  records: number;
+  completeness: number;
+  duplicateRate: number;
+  isSimulated: boolean;
+}
+
+export type DataQualityReportSummary = {
+  total?: number;
+  passed?: number;
+  warnings?: number;
+  failed?: number;
+};
+
+export interface DataQualityReport {
+  generatedAt: string;
+  summary: DataQualityReportSummary;
+  checks: DataQualityCheck[];
+  datasets: DataQualityDataset[];
+}
+
+export type MitigationActionCriteria = {[key: string]: number};
+
+export interface MitigationAction {
+  id: number;
+  planId: number;
+  title: string;
+  /** @nullable */
+  description?: string | null;
+  category: string;
+  responsibleAgency: string;
+  /** @nullable */
+  startDate?: string | null;
+  /** @nullable */
+  endDate?: string | null;
+  budget: number;
+  progress: number;
+  status: string;
+  priorityScore: number;
+  criteria: MitigationActionCriteria;
+}
+
+export interface MitigationPlan {
+  id: number;
+  title: string;
+  regionName: string;
+  province: string;
+  hazardType: string;
+  /** @nullable */
+  assessmentId?: number | null;
+  status: string;
+  /** @nullable */
+  publicSummary?: string | null;
+  leadAgency: string;
+  budgetTotal: number;
+  /** @nullable */
+  timelineStart?: string | null;
+  /** @nullable */
+  timelineEnd?: string | null;
+  version: number;
+  /** @nullable */
+  publishedAt?: string | null;
+  updatedAt: string;
+  actionCount: number;
+  completedActions?: number;
+  progress: number;
+}
+
+export interface MitigationPlanDetail {
+  id: number;
+  title: string;
+  regionName: string;
+  province: string;
+  hazardType: string;
+  /** @nullable */
+  assessmentId?: number | null;
+  status: string;
+  /** @nullable */
+  publicSummary?: string | null;
+  /** @nullable */
+  internalNotes?: string | null;
+  leadAgency: string;
+  budgetTotal: number;
+  /** @nullable */
+  timelineStart?: string | null;
+  /** @nullable */
+  timelineEnd?: string | null;
+  version: number;
+  /** @nullable */
+  createdBy?: number | null;
+  /** @nullable */
+  reviewedAt?: string | null;
+  /** @nullable */
+  approvedAt?: string | null;
+  /** @nullable */
+  publishedAt?: string | null;
+  updatedAt: string;
+  /** @nullable */
+  riskScore?: number | null;
+  actions: MitigationAction[];
+}
+
+export interface CreateMitigationPlanInput {
+  title: string;
+  regionName: string;
+  province?: string;
+  hazardType: string;
+  /** @nullable */
+  assessmentId?: number | null;
+  leadAgency: string;
+  /** @nullable */
+  publicSummary?: string | null;
+  /** @nullable */
+  internalNotes?: string | null;
+  budgetTotal?: number;
+  /** @nullable */
+  timelineStart?: string | null;
+  /** @nullable */
+  timelineEnd?: string | null;
+}
+
+export interface UpdateMitigationPlanInput {
+  title?: string;
+  /** @nullable */
+  publicSummary?: string | null;
+  /** @nullable */
+  internalNotes?: string | null;
+  leadAgency?: string;
+  budgetTotal?: number;
+  /** @nullable */
+  timelineStart?: string | null;
+  /** @nullable */
+  timelineEnd?: string | null;
+}
+
+export type TransitionPlanInputAction = typeof TransitionPlanInputAction[keyof typeof TransitionPlanInputAction];
+
+
+export const TransitionPlanInputAction = {
+  submit_review: 'submit_review',
+  approve: 'approve',
+  publish: 'publish',
+  return_draft: 'return_draft',
+  archive: 'archive',
+} as const;
+
+export interface TransitionPlanInput {
+  action: TransitionPlanInputAction;
+  /** @nullable */
+  note?: string | null;
+}
+
+export type MitigationRecommendationPriority = typeof MitigationRecommendationPriority[keyof typeof MitigationRecommendationPriority];
+
+
+export const MitigationRecommendationPriority = {
+  immediate: 'immediate',
+  high: 'high',
+  planned: 'planned',
+  monitor: 'monitor',
+} as const;
+
+export type MitigationRecommendationSuggestedInterventionsItem = {
+  title?: string;
+  category?: string;
+  rationale?: string;
+};
+
+export interface MitigationRecommendation {
+  assessmentId: number;
+  regionName: string;
+  province: string;
+  hazardType: string;
+  riskScore: number;
+  riskClass: string;
+  priority: MitigationRecommendationPriority;
+  rationale: string;
+  requiresVerification: boolean;
+  /** @nullable */
+  existingPlanId?: number | null;
+  /** @nullable */
+  existingPlanStatus?: string | null;
+  suggestedInterventions: MitigationRecommendationSuggestedInterventionsItem[];
+}
+
+export interface Facility {
+  id: number;
+  name: string;
+  type: string;
+  regionName: string;
+  province: string;
+  /** @nullable */
+  address?: string | null;
+  latitude: number;
+  longitude: number;
+  capacity: number;
+  occupancy: number;
+  amenities?: string[];
+  status: string;
+  isPublic: boolean;
+  /** @nullable */
+  contact?: string | null;
+  /** @nullable */
+  operatingAgency?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  verifiedAt?: string | null;
+}
+
+export interface UpdateFacilityInput {
+  status?: string;
+  occupancy?: number;
+  notes?: string;
+}
+
+export interface ResourceItem {
+  id: number;
+  itemName: string;
+  category: string;
+  quantity: number;
+  unit: string;
+  regionName: string;
+  /** @nullable */
+  facilityId?: number | null;
+  /** @nullable */
+  facilityName?: string | null;
+  condition: string;
+  allocationStatus: string;
+  /** @nullable */
+  notes?: string | null;
+  lastUpdated: string;
+}
+
+export interface UpdateResourceInput {
+  quantity?: number;
+  condition?: string;
+  allocationStatus?: string;
+  notes?: string;
+}
+
+export interface PublicMitigationPlan {
+  id: number;
+  title: string;
+  regionName: string;
+  province: string;
+  hazardType: string;
+  /** @nullable */
+  publicSummary?: string | null;
+  leadAgency: string;
+  budgetTotal?: number;
+  /** @nullable */
+  timelineStart?: string | null;
+  /** @nullable */
+  timelineEnd?: string | null;
+  /** @nullable */
+  publishedAt: string | null;
+  version: number;
+  actionCount?: number;
+  progress?: number;
+}
+
+export interface PublicMitigationAction {
+  id: number;
+  title: string;
+  /** @nullable */
+  description?: string | null;
+  category: string;
+  responsibleAgency: string;
+  /** @nullable */
+  startDate?: string | null;
+  /** @nullable */
+  endDate?: string | null;
+  progress: number;
+  status: string;
+}
+
+export interface PublicMitigationPlanDetail {
+  id: number;
+  title: string;
+  regionName: string;
+  province: string;
+  hazardType: string;
+  /** @nullable */
+  publicSummary?: string | null;
+  leadAgency: string;
+  budgetTotal?: number;
+  /** @nullable */
+  timelineStart?: string | null;
+  /** @nullable */
+  timelineEnd?: string | null;
+  /** @nullable */
+  publishedAt?: string | null;
+  version?: number;
+  progress?: number;
+  actions: PublicMitigationAction[];
+}
+
+export interface PublicFacility {
+  id: number;
+  name: string;
+  type: string;
+  regionName: string;
+  province?: string;
+  /** @nullable */
+  address?: string | null;
+  latitude: number;
+  longitude: number;
+  capacity?: number;
+  amenities?: string[];
+  status: string;
+  /** @nullable */
+  contact?: string | null;
+  /** @nullable */
+  operatingAgency?: string | null;
+  /** @nullable */
+  verifiedAt?: string | null;
+}
+
+export interface PublicGuideline {
+  id: number;
+  title: string;
+  category: string;
+  audience?: string;
+  summary: string;
+  steps?: string[];
+  source: string;
+  /** @nullable */
+  sourceUrl?: string | null;
+  updatedAt: string;
+}
+
+export interface PublicOverview {
+  publishedPlans: number;
+  regionsCovered: number;
+  shelters: number;
+  totalShelterCapacity: number;
+  guidelines: number;
+  /** @nullable */
+  lastPublishedAt?: string | null;
+}
+
+export interface PublicEvacuationRoute {
+  id: number;
+  name: string;
+  routeCode: string;
+  originName: string;
+  originLatitude: number;
+  originLongitude: number;
+  destinationName: string;
+  destinationLatitude: number;
+  destinationLongitude: number;
+  regionName: string;
+  province: string;
+  hazardType: string;
+  routeType: string;
+  distanceKm: number;
+  estimatedTimeMinutes: number;
+  /** @nullable */
+  roadSurface?: string | null;
+  isAccessible: boolean;
+  hazardExposure: string;
+  routeStatus: string;
+  routeGeometry: number[][];
+  /** @nullable */
+  publicDescription?: string | null;
+  /** @nullable */
+  publishedAt?: string | null;
+  version: number;
+}
+
+export type PublicEvacuationRouteDetailSegmentsItem = {
+  id: number;
+  segmentOrder: number;
+  name: string;
+  startLatitude: number;
+  startLongitude: number;
+  endLatitude: number;
+  endLongitude: number;
+  distanceKm: number;
+  roadCondition: string;
+  isBlocked: boolean;
+};
+
+/**
+ * @nullable
+ */
+export type PublicEvacuationRouteDetailDestinationFacility = {
+  id?: number;
+  name?: string;
+  type?: string;
+  capacity?: number;
+  /** @nullable */
+  address?: string | null;
+} | null;
+
+export type PublicEvacuationRouteDetail = PublicEvacuationRoute & {
+  segments?: PublicEvacuationRouteDetailSegmentsItem[];
+  /** @nullable */
+  destinationFacility?: PublicEvacuationRouteDetailDestinationFacility;
+};
+
+export interface EvacuationRouteFull {
+  id: number;
+  name: string;
+  routeCode: string;
+  originName: string;
+  originLatitude: number;
+  originLongitude: number;
+  destinationName: string;
+  destinationLatitude: number;
+  destinationLongitude: number;
+  /** @nullable */
+  destinationFacilityId?: number | null;
+  regionName: string;
+  province: string;
+  hazardType: string;
+  routeType: string;
+  distanceKm: number;
+  estimatedTimeMinutes: number;
+  maxCapacityPersons: number;
+  /** @nullable */
+  elevationGainM?: number | null;
+  /** @nullable */
+  roadSurface?: string | null;
+  isAccessible: boolean;
+  hazardExposure: string;
+  routeStatus: string;
+  routeGeometry: number[][];
+  /** @nullable */
+  evaluationNotes?: string | null;
+  /** @nullable */
+  publicDescription?: string | null;
+  /** @nullable */
+  createdBy?: number | null;
+  /** @nullable */
+  reviewedBy?: number | null;
+  /** @nullable */
+  reviewedAt?: string | null;
+  /** @nullable */
+  approvedBy?: number | null;
+  /** @nullable */
+  approvedAt?: string | null;
+  /** @nullable */
+  publishedAt?: string | null;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * @nullable
+ */
+export type EvacuationRouteDetailDestinationFacility = {
+  id?: number;
+  name?: string;
+  type?: string;
+  regionName?: string;
+  province?: string;
+  /** @nullable */
+  address?: string | null;
+  latitude?: number;
+  longitude?: number;
+  capacity?: number;
+  occupancy?: number;
+  status?: string;
+  isPublic?: boolean;
+  /** @nullable */
+  contact?: string | null;
+  /** @nullable */
+  operatingAgency?: string | null;
+} | null;
+
+export interface RouteSegmentItem {
+  id: number;
+  routeId: number;
+  segmentOrder: number;
+  name: string;
+  startLatitude: number;
+  startLongitude: number;
+  endLatitude: number;
+  endLongitude: number;
+  distanceKm: number;
+  roadCondition: string;
+  /** @nullable */
+  roadWidth?: string | null;
+  /** @nullable */
+  hazardNotes?: string | null;
+  isBlocked: boolean;
+  /** @nullable */
+  blockageReason?: string | null;
+  /** @nullable */
+  lastInspectedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type RouteVerificationItemGeotagPhotosItem = {
+  url: string;
+  latitude: number;
+  longitude: number;
+  caption: string;
+};
+
+export interface RouteVerificationItem {
+  id: number;
+  routeId: number;
+  inspectorId: number;
+  inspectorName: string;
+  inspectionDate: string;
+  overallCondition: string;
+  roadAccessible: boolean;
+  signageAdequate: boolean;
+  shelterReady: boolean;
+  lightingAvailable: boolean;
+  drainageAdequate: boolean;
+  findings: string;
+  /** @nullable */
+  recommendations?: string | null;
+  geotagPhotos: RouteVerificationItemGeotagPhotosItem[];
+  gpsTrack?: number[][];
+  createdAt: string;
+}
+
+export interface EvacuationScenarioParameters {
+  rainfallIntensityMm?: number;
+  groundSaturationPercent?: number;
+  earthquakeMagnitude?: number;
+  tsunamiWaveHeightM?: number;
+  estimatedArrivalTimeMin?: number;
+  targetPopulation?: number;
+  blockedRoadProbability?: number;
+  evacuationMode?: string;
+}
+
+export type EvacuationScenarioItemCandidateRoutesItem = {
+  routeId?: number;
+  name: string;
+  score: number;
+  travelTime: number;
+  hazardExposure: string;
+  notes: string;
+};
+
+export interface EvacuationScenarioItem {
+  id: number;
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  hazardType: string;
+  regionName: string;
+  parameters: EvacuationScenarioParameters;
+  candidateRoutes: EvacuationScenarioItemCandidateRoutesItem[];
+  /** @nullable */
+  recommendation?: string | null;
+  status: string;
+  /** @nullable */
+  createdBy?: number | null;
+  createdAt: string;
+}
+
+export type EvacuationRouteDetail = EvacuationRouteFull & {
+  segments?: RouteSegmentItem[];
+  verifications?: RouteVerificationItem[];
+  scenarios?: EvacuationScenarioItem[];
+  /** @nullable */
+  destinationFacility?: EvacuationRouteDetailDestinationFacility;
+};
+
+export interface CreateEvacuationRouteInput {
+  name: string;
+  routeCode: string;
+  originName: string;
+  originLatitude: number;
+  originLongitude: number;
+  destinationName: string;
+  destinationLatitude: number;
+  destinationLongitude: number;
+  /** @nullable */
+  destinationFacilityId?: number | null;
+  regionName: string;
+  province?: string;
+  hazardType: string;
+  routeType?: string;
+  distanceKm?: number;
+  estimatedTimeMinutes?: number;
+  maxCapacityPersons?: number;
+  elevationGainM?: number;
+  /** @nullable */
+  roadSurface?: string | null;
+  isAccessible?: boolean;
+  hazardExposure?: string;
+  routeGeometry?: number[][];
+  /** @nullable */
+  evaluationNotes?: string | null;
+  /** @nullable */
+  publicDescription?: string | null;
+}
+
+export interface UpdateEvacuationRouteInput {
+  name?: string;
+  routeCode?: string;
+  originName?: string;
+  originLatitude?: number;
+  originLongitude?: number;
+  destinationName?: string;
+  destinationLatitude?: number;
+  destinationLongitude?: number;
+  /** @nullable */
+  destinationFacilityId?: number | null;
+  regionName?: string;
+  province?: string;
+  hazardType?: string;
+  routeType?: string;
+  distanceKm?: number;
+  estimatedTimeMinutes?: number;
+  maxCapacityPersons?: number;
+  elevationGainM?: number;
+  /** @nullable */
+  roadSurface?: string | null;
+  isAccessible?: boolean;
+  hazardExposure?: string;
+  routeGeometry?: number[][];
+  /** @nullable */
+  evaluationNotes?: string | null;
+  /** @nullable */
+  publicDescription?: string | null;
+}
+
+export type TransitionRouteInputAction = typeof TransitionRouteInputAction[keyof typeof TransitionRouteInputAction];
+
+
+export const TransitionRouteInputAction = {
+  submit_analysis: 'submit_analysis',
+  submit_verification: 'submit_verification',
+  submit_review: 'submit_review',
+  approve: 'approve',
+  publish: 'publish',
+  return_draft: 'return_draft',
+  archive: 'archive',
+} as const;
+
+export interface TransitionRouteInput {
+  action: TransitionRouteInputAction;
+}
+
+export interface CreateRouteSegmentInput {
+  segmentOrder?: number;
+  name: string;
+  startLatitude: number;
+  startLongitude: number;
+  endLatitude: number;
+  endLongitude: number;
+  distanceKm?: number;
+  roadCondition?: string;
+  /** @nullable */
+  roadWidth?: string | null;
+  /** @nullable */
+  hazardNotes?: string | null;
+  isBlocked?: boolean;
+  /** @nullable */
+  blockageReason?: string | null;
+  /** @nullable */
+  lastInspectedAt?: string | null;
+}
+
+export interface UpdateRouteSegmentInput {
+  segmentOrder?: number;
+  name?: string;
+  startLatitude?: number;
+  startLongitude?: number;
+  endLatitude?: number;
+  endLongitude?: number;
+  distanceKm?: number;
+  roadCondition?: string;
+  /** @nullable */
+  roadWidth?: string | null;
+  /** @nullable */
+  hazardNotes?: string | null;
+  isBlocked?: boolean;
+  /** @nullable */
+  blockageReason?: string | null;
+  /** @nullable */
+  lastInspectedAt?: string | null;
+}
+
+export type CreateRouteVerificationInputGeotagPhotosItem = {
+  url?: string;
+  latitude?: number;
+  longitude?: number;
+  caption?: string;
+};
+
+export interface CreateRouteVerificationInput {
+  inspectorName?: string;
+  inspectionDate?: string;
+  overallCondition: string;
+  roadAccessible?: boolean;
+  signageAdequate?: boolean;
+  shelterReady?: boolean;
+  lightingAvailable?: boolean;
+  drainageAdequate?: boolean;
+  findings: string;
+  /** @nullable */
+  recommendations?: string | null;
+  geotagPhotos?: CreateRouteVerificationInputGeotagPhotosItem[];
+  gpsTrack?: number[][];
+}
+
+export type CreateEvacuationScenarioInputCandidateRoutesItem = {
+  routeId?: number;
+  name?: string;
+  score?: number;
+  travelTime?: number;
+  hazardExposure?: string;
+  notes?: string;
+};
+
+export interface CreateEvacuationScenarioInput {
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  hazardType: string;
+  regionName: string;
+  parameters?: EvacuationScenarioParameters;
+  candidateRoutes?: CreateEvacuationScenarioInputCandidateRoutesItem[];
+  /** @nullable */
+  recommendation?: string | null;
+  status?: string;
+}
+
 export type GetDashboardActivityParams = {
 limit?: number;
 };
@@ -663,5 +1690,54 @@ export const GetAlertsStatus = {
 export type GetAuditLogsParams = {
 limit?: number;
 userId?: number;
+};
+
+export type GetRiskAssessmentsParams = {
+hazardType?: string;
+province?: string;
+riskClass?: string;
+verified?: boolean;
+minScore?: number;
+search?: string;
+};
+
+export type GetRiskRankingsParams = {
+limit?: number;
+};
+
+export type GetIntegrationLogsParams = {
+limit?: number;
+level?: string;
+sourceId?: number;
+};
+
+export type GetMitigationPlansParams = {
+status?: string;
+};
+
+export type GetMitigationFacilitiesParams = {
+type?: string;
+};
+
+export type GetResourcesParams = {
+region?: string;
+category?: string;
+};
+
+export type GetPublicEvacuationRoutesParams = {
+regionName?: string;
+hazardType?: string;
+destinationType?: string;
+};
+
+export type GetEvacuationRoutesParams = {
+regionName?: string;
+hazardType?: string;
+routeStatus?: string;
+};
+
+export type GetEvacuationScenariosParams = {
+regionName?: string;
+hazardType?: string;
 };
 

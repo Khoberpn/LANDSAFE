@@ -34,6 +34,18 @@ tags:
     description: User management
   - name: audit
     description: Audit logs
+  - name: risk
+    description: Risk & vulnerability assessment
+  - name: scenarios
+    description: Hypothetical scenario & impact analysis
+  - name: datahub
+    description: Data integration hub
+  - name: mitigation
+    description: Mitigation planning & evacuation resources (internal)
+  - name: public
+    description: Public mitigation portal (no authentication)
+  - name: evacuation
+    description: Evacuation Route Intelligence, field verification, and scenario optimization
 
 paths:
   /healthz:
@@ -758,6 +770,1075 @@ paths:
                 items:
                   $ref: "#/components/schemas/AuditLog"
 
+  /risk/assessments:
+    get:
+      operationId: getRiskAssessments
+      tags: [risk]
+      summary: List regional risk assessments (BPBD only)
+      parameters:
+        - name: hazardType
+          in: query
+          schema:
+            type: string
+        - name: province
+          in: query
+          schema:
+            type: string
+        - name: riskClass
+          in: query
+          schema:
+            type: string
+        - name: verified
+          in: query
+          schema:
+            type: boolean
+        - name: minScore
+          in: query
+          schema:
+            type: number
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Risk assessments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RiskAssessment"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /risk/summary:
+    get:
+      operationId: getRiskSummary
+      tags: [risk]
+      summary: Aggregate risk indicators across all assessed regions
+      responses:
+        "200":
+          description: Risk summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegionalRiskSummary"
+
+  /risk/rankings:
+    get:
+      operationId: getRiskRankings
+      tags: [risk]
+      summary: High-risk area ranking
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Ranked areas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RiskRanking"
+
+  /risk/assessments/{id}/verify:
+    patch:
+      operationId: verifyRiskAssessment
+      tags: [risk]
+      summary: Mark an assessment as verified (audited)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyAssessmentInput"
+      responses:
+        "200":
+          description: Updated assessment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskAssessment"
+        "400":
+          description: Invalid input
+        "404":
+          description: Not found
+
+  /scenarios:
+    get:
+      operationId: getScenarios
+      tags: [scenarios]
+      summary: List saved scenarios (simulations only)
+      responses:
+        "200":
+          description: Scenarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Scenario"
+    post:
+      operationId: createScenario
+      tags: [scenarios]
+      summary: Run and store a hypothetical impact simulation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateScenarioInput"
+      responses:
+        "201":
+          description: Scenario created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scenario"
+        "400":
+          description: Invalid input
+
+  /scenarios/compare:
+    post:
+      operationId: compareScenarios
+      tags: [scenarios]
+      summary: Compare two to four saved scenarios
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompareScenariosInput"
+      responses:
+        "200":
+          description: Scenario comparison
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScenarioComparison"
+        "400":
+          description: Invalid input
+
+  /scenarios/{id}:
+    get:
+      operationId: getScenario
+      tags: [scenarios]
+      summary: Scenario detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Scenario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scenario"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteScenario
+      tags: [scenarios]
+      summary: Delete a saved scenario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /scenarios/{id}/report:
+    get:
+      operationId: getScenarioReport
+      tags: [scenarios]
+      summary: Download a plain-text scenario assessment report
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Plain text report
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: Not found
+
+  /data-hub/sources:
+    get:
+      operationId: getDataSources
+      tags: [datahub]
+      summary: List registered data sources with sync status
+      responses:
+        "200":
+          description: Data sources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DataSource"
+
+  /data-hub/sources/{id}:
+    patch:
+      operationId: updateDataSource
+      tags: [datahub]
+      summary: Update a data source registry entry (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDataSourceInput"
+      responses:
+        "200":
+          description: Updated source
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataSource"
+        "400":
+          description: Invalid input
+        "404":
+          description: Not found
+
+  /data-hub/sources/{id}/sync:
+    post:
+      operationId: syncDataSource
+      tags: [datahub]
+      summary: Trigger a synchronisation attempt for one source
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Sync outcome (synced, simulated or unavailable)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncResult"
+        "404":
+          description: Not found
+
+  /data-hub/logs:
+    get:
+      operationId: getIntegrationLogs
+      tags: [datahub]
+      summary: Integration and error log
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: level
+          in: query
+          schema:
+            type: string
+        - name: sourceId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Log entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IntegrationLogEntry"
+
+  /data-hub/quality:
+    get:
+      operationId: getDataQuality
+      tags: [datahub]
+      summary: Compute validation, completeness and duplicate checks
+      responses:
+        "200":
+          description: Data quality report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataQualityReport"
+
+  /data-hub/validation/run:
+    post:
+      operationId: runDataValidation
+      tags: [datahub]
+      summary: Run the validation suite and record the run in the log
+      responses:
+        "200":
+          description: Data quality report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataQualityReport"
+
+  /mitigation/recommendations:
+    get:
+      operationId: getMitigationRecommendations
+      tags: [mitigation]
+      summary: Regional mitigation priorities derived from risk assessments
+      responses:
+        "200":
+          description: Recommendations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MitigationRecommendation"
+
+  /mitigation/plans:
+    get:
+      operationId: getMitigationPlans
+      tags: [mitigation]
+      summary: List all mitigation plans (internal)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MitigationPlan"
+    post:
+      operationId: createMitigationPlan
+      tags: [mitigation]
+      summary: Create a draft mitigation plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMitigationPlanInput"
+      responses:
+        "201":
+          description: Created plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MitigationPlanDetail"
+        "400":
+          description: Invalid input
+
+  /mitigation/plans/{id}:
+    get:
+      operationId: getMitigationPlan
+      tags: [mitigation]
+      summary: Mitigation plan detail with actions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Plan detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MitigationPlanDetail"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateMitigationPlan
+      tags: [mitigation]
+      summary: Update plan content (draft or review only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMitigationPlanInput"
+      responses:
+        "200":
+          description: Updated plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MitigationPlanDetail"
+        "400":
+          description: Invalid input
+        "404":
+          description: Not found
+        "409":
+          description: Plan is locked by its workflow status
+
+  /mitigation/plans/{id}/transition:
+    post:
+      operationId: transitionMitigationPlan
+      tags: [mitigation]
+      summary: Advance the publication workflow
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransitionPlanInput"
+      responses:
+        "200":
+          description: Updated plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MitigationPlanDetail"
+        "400":
+          description: Invalid transition
+        "403":
+          description: Forbidden for this role
+        "404":
+          description: Not found
+
+  /mitigation/facilities:
+    get:
+      operationId: getMitigationFacilities
+      tags: [mitigation]
+      summary: Evacuation facilities with internal occupancy data
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Facilities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Facility"
+
+  /mitigation/facilities/{id}:
+    patch:
+      operationId: updateFacility
+      tags: [mitigation]
+      summary: Update facility status, occupancy or internal notes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFacilityInput"
+      responses:
+        "200":
+          description: Updated facility
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Facility"
+        "400":
+          description: Invalid input
+        "404":
+          description: Not found
+
+  /mitigation/resources:
+    get:
+      operationId: getResources
+      tags: [mitigation]
+      summary: Resource availability inventory (internal)
+      parameters:
+        - name: region
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Resources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResourceItem"
+
+  /mitigation/resources/{id}:
+    patch:
+      operationId: updateResource
+      tags: [mitigation]
+      summary: Update stock, condition or allocation status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateResourceInput"
+      responses:
+        "200":
+          description: Updated resource
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourceItem"
+        "400":
+          description: Invalid input
+        "404":
+          description: Not found
+
+  /public/mitigation/overview:
+    get:
+      operationId: getPublicOverview
+      tags: [public]
+      security: []
+      summary: Public portal headline figures
+      responses:
+        "200":
+          description: Overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicOverview"
+
+  /public/mitigation/plans:
+    get:
+      operationId: getPublicMitigationPlans
+      tags: [public]
+      security: []
+      summary: Published mitigation plans (public-safe fields only)
+      responses:
+        "200":
+          description: Published plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PublicMitigationPlan"
+
+  /public/mitigation/plans/{id}:
+    get:
+      operationId: getPublicMitigationPlan
+      tags: [public]
+      security: []
+      summary: Published plan detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Published plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicMitigationPlanDetail"
+        "404":
+          description: Not published or not found
+
+  /public/evacuation:
+    get:
+      operationId: getPublicEvacuationFacilities
+      tags: [public]
+      security: []
+      summary: Officially designated public evacuation facilities
+      responses:
+        "200":
+          description: Public facilities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PublicFacility"
+
+  /public/guidelines:
+    get:
+      operationId: getPublicGuidelines
+      tags: [public]
+      security: []
+      summary: Public emergency preparedness guidelines
+      responses:
+        "200":
+          description: Guidelines
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PublicGuideline"
+
+  /public/evacuation/routes:
+    get:
+      operationId: getPublicEvacuationRoutes
+      tags: [evacuation]
+      security: []
+      summary: List officially verified and published evacuation routes
+      parameters:
+        - name: regionName
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: hazardType
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: destinationType
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Published evacuation routes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PublicEvacuationRoute"
+
+  /public/evacuation/routes/{id}:
+    get:
+      operationId: getPublicEvacuationRoute
+      tags: [evacuation]
+      security: []
+      summary: Detail of published evacuation route with segments and shelter
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Route detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicEvacuationRouteDetail"
+        "404":
+          description: Route not found or not published
+
+  /evacuation/routes:
+    get:
+      operationId: getEvacuationRoutes
+      tags: [evacuation]
+      summary: List evacuation routes across all lifecycle statuses
+      parameters:
+        - name: regionName
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: hazardType
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: routeStatus
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: All routes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EvacuationRouteFull"
+    post:
+      operationId: createEvacuationRoute
+      tags: [evacuation]
+      summary: Create candidate evacuation route
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEvacuationRouteInput"
+      responses:
+        "201":
+          description: Created route
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvacuationRouteFull"
+        "400":
+          description: Validation error
+        "409":
+          description: Conflict (e.g. duplicate route code)
+
+  /evacuation/routes/{id}:
+    get:
+      operationId: getEvacuationRoute
+      tags: [evacuation]
+      summary: Full route detail with segments, verifications, and scenarios
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Route detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvacuationRouteDetail"
+        "404":
+          description: Route not found
+    patch:
+      operationId: updateEvacuationRoute
+      tags: [evacuation]
+      summary: Update route in draft or analysis status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateEvacuationRouteInput"
+      responses:
+        "200":
+          description: Updated route
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvacuationRouteFull"
+        "400":
+          description: Validation error
+        "409":
+          description: Route is locked or code collision
+    delete:
+      operationId: deleteEvacuationRoute
+      tags: [evacuation]
+      summary: Delete draft evacuation route (Admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "409":
+          description: Only draft routes can be deleted
+
+  /evacuation/routes/{id}/transition:
+    post:
+      operationId: transitionEvacuationRoute
+      tags: [evacuation]
+      summary: Advance or return route lifecycle workflow status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransitionRouteInput"
+      responses:
+        "200":
+          description: Transitioned route
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvacuationRouteFull"
+        "400":
+          description: Invalid transition or missing prerequisites (e.g. verification record)
+        "403":
+          description: Insufficient role permissions
+
+  /evacuation/routes/{routeId}/segments:
+    get:
+      operationId: getRouteSegments
+      tags: [evacuation]
+      summary: List road segments for an evacuation route
+      parameters:
+        - name: routeId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Segments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RouteSegmentItem"
+    post:
+      operationId: createRouteSegment
+      tags: [evacuation]
+      summary: Add road segment to evacuation route
+      parameters:
+        - name: routeId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRouteSegmentInput"
+      responses:
+        "201":
+          description: Created segment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteSegmentItem"
+
+  /evacuation/routes/{routeId}/segments/{id}:
+    patch:
+      operationId: updateRouteSegment
+      tags: [evacuation]
+      summary: Update road segment condition, blockage, or notes
+      parameters:
+        - name: routeId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRouteSegmentInput"
+      responses:
+        "200":
+          description: Updated segment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteSegmentItem"
+    delete:
+      operationId: deleteRouteSegment
+      tags: [evacuation]
+      summary: Remove road segment
+      parameters:
+        - name: routeId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /evacuation/routes/{routeId}/verifications:
+    get:
+      operationId: getRouteVerifications
+      tags: [evacuation]
+      summary: List field verification inspection reports for a route
+      parameters:
+        - name: routeId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Verifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RouteVerificationItem"
+    post:
+      operationId: createRouteVerification
+      tags: [evacuation]
+      summary: Record field inspection result with geotagged data
+      parameters:
+        - name: routeId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRouteVerificationInput"
+      responses:
+        "201":
+          description: Recorded verification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteVerificationItem"
+
+  /evacuation/scenarios:
+    get:
+      operationId: getEvacuationScenarios
+      tags: [evacuation]
+      summary: List evacuation planning simulation scenarios
+      parameters:
+        - name: regionName
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: hazardType
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Scenarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EvacuationScenarioItem"
+    post:
+      operationId: createEvacuationScenario
+      tags: [evacuation]
+      summary: Create hypothetical disaster scenario with candidate routes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEvacuationScenarioInput"
+      responses:
+        "201":
+          description: Created scenario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvacuationScenarioItem"
+
+  /evacuation/scenarios/{id}:
+    get:
+      operationId: getEvacuationScenario
+      tags: [evacuation]
+      summary: View scenario details and candidate route evaluations
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Scenario details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvacuationScenarioItem"
+    delete:
+      operationId: deleteEvacuationScenario
+      tags: [evacuation]
+      summary: Delete scenario simulation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1315,3 +2396,1685 @@ components:
           type: ["string", "null"]
         createdAt:
           type: string
+
+    IndicatorItem:
+      type: object
+      required: [label, value]
+      properties:
+        label:
+          type: string
+        value:
+          type: number
+
+    RiskIndicators:
+      type: object
+      required: [hazard, exposure, vulnerability, capacity]
+      properties:
+        hazard:
+          type: array
+          items:
+            $ref: "#/components/schemas/IndicatorItem"
+        exposure:
+          type: array
+          items:
+            $ref: "#/components/schemas/IndicatorItem"
+        vulnerability:
+          type: array
+          items:
+            $ref: "#/components/schemas/IndicatorItem"
+        capacity:
+          type: array
+          items:
+            $ref: "#/components/schemas/IndicatorItem"
+
+    RiskAssessment:
+      type: object
+      required:
+        - id
+        - regionName
+        - province
+        - latitude
+        - longitude
+        - hazardType
+        - hazardIndex
+        - exposureIndex
+        - vulnerabilityIndex
+        - capacityIndex
+        - riskScore
+        - riskClass
+        - population
+        - exposedPopulation
+        - exposedFacilities
+        - exposedRoadsKm
+        - verified
+        - assessedAt
+      properties:
+        id:
+          type: integer
+        regionName:
+          type: string
+        regionCode:
+          type: ["string", "null"]
+        province:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        extentKm:
+          type: number
+        hazardType:
+          type: string
+        hazardIndex:
+          type: number
+        exposureIndex:
+          type: number
+        vulnerabilityIndex:
+          type: number
+        capacityIndex:
+          type: number
+        riskScore:
+          type: number
+        riskClass:
+          type: string
+        population:
+          type: integer
+        exposedPopulation:
+          type: integer
+        exposedFacilities:
+          type: integer
+        exposedRoadsKm:
+          type: number
+        indicators:
+          $ref: "#/components/schemas/RiskIndicators"
+        sources:
+          type: array
+          items:
+            type: string
+        verified:
+          type: boolean
+        verifiedAt:
+          type: ["string", "null"]
+        assessedAt:
+          type: string
+
+    RegionalRiskSummary:
+      type: object
+      required:
+        - totalAssessments
+        - verifiedAssessments
+        - regionsCovered
+        - averageRiskScore
+        - byClass
+        - byHazard
+        - exposedPopulation
+        - exposedFacilities
+      properties:
+        totalAssessments:
+          type: integer
+        verifiedAssessments:
+          type: integer
+        regionsCovered:
+          type: integer
+        provinces:
+          type: array
+          items:
+            type: string
+        averageRiskScore:
+          type: number
+        averageHazard:
+          type: number
+        averageExposure:
+          type: number
+        averageVulnerability:
+          type: number
+        averageCapacity:
+          type: number
+        byClass:
+          type: object
+          properties:
+            low:
+              type: integer
+            moderate:
+              type: integer
+            high:
+              type: integer
+            extreme:
+              type: integer
+        byHazard:
+          type: array
+          items:
+            type: object
+            properties:
+              hazardType:
+                type: string
+              count:
+                type: integer
+              averageRiskScore:
+                type: number
+        exposedPopulation:
+          type: integer
+        exposedFacilities:
+          type: integer
+        exposedRoadsKm:
+          type: number
+        lastAssessedAt:
+          type: ["string", "null"]
+        weights:
+          type: object
+          properties:
+            hazard:
+              type: number
+            exposure:
+              type: number
+            vulnerability:
+              type: number
+            capacity:
+              type: number
+
+    RiskRanking:
+      type: object
+      required: [rank, id, regionName, province, hazardType, riskScore, riskClass]
+      properties:
+        rank:
+          type: integer
+        id:
+          type: integer
+        regionName:
+          type: string
+        province:
+          type: string
+        hazardType:
+          type: string
+        riskScore:
+          type: number
+        riskClass:
+          type: string
+        exposedPopulation:
+          type: integer
+        verified:
+          type: boolean
+
+    VerifyAssessmentInput:
+      type: object
+      required: [verified]
+      properties:
+        verified:
+          type: boolean
+        note:
+          type: ["string", "null"]
+
+
+    ScenarioParameters:
+      type: object
+      required:
+        - intensity
+        - durationHours
+        - rainfallMm
+        - season
+        - timeOfDay
+        - warningLeadTimeHours
+      properties:
+        intensity:
+          type: number
+        durationHours:
+          type: number
+        rainfallMm:
+          type: number
+        season:
+          type: string
+          enum: [dry, transition, wet]
+        timeOfDay:
+          type: string
+          enum: [day, night]
+        warningLeadTimeHours:
+          type: number
+
+    ScenarioSectorImpact:
+      type: object
+      required: [sector, impact, note]
+      properties:
+        sector:
+          type: string
+        impact:
+          type: number
+        note:
+          type: string
+
+    ScenarioReliefNeed:
+      type: object
+      required: [category, quantity, unit]
+      properties:
+        category:
+          type: string
+        quantity:
+          type: number
+        unit:
+          type: string
+
+    ScenarioResponsePhase:
+      type: object
+      required: [phase, window, focus]
+      properties:
+        phase:
+          type: string
+        window:
+          type: string
+        focus:
+          type: string
+
+    ScenarioResults:
+      type: object
+      required:
+        - affectedPopulation
+        - affectedVulnerableGroups
+        - displacedPopulation
+        - medicalNeeds
+        - affectedFacilities
+        - affectedRoadsKm
+        - economicLossIdrBillion
+        - impactLevel
+        - sectorImpacts
+        - reliefNeeds
+        - responsePhases
+        - modelNotes
+      properties:
+        affectedPopulation:
+          type: integer
+        affectedVulnerableGroups:
+          type: integer
+        displacedPopulation:
+          type: integer
+        medicalNeeds:
+          type: integer
+        affectedFacilities:
+          type: integer
+        affectedRoadsKm:
+          type: number
+        economicLossIdrBillion:
+          type: number
+        impactLevel:
+          type: string
+          enum: [limited, moderate, severe, critical]
+        sectorImpacts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioSectorImpact"
+        reliefNeeds:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioReliefNeed"
+        responsePhases:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioResponsePhase"
+        modelNotes:
+          type: array
+          items:
+            type: string
+
+    Scenario:
+      type: object
+      required: [id, name, hazardType, assessmentId, regionName, parameters, results, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        hazardType:
+          type: string
+        assessmentId:
+          type: integer
+        regionName:
+          type: string
+        parameters:
+          $ref: "#/components/schemas/ScenarioParameters"
+        results:
+          $ref: "#/components/schemas/ScenarioResults"
+        status:
+          type: string
+        notes:
+          type: ["string", "null"]
+        isSimulation:
+          type: boolean
+        createdAt:
+          type: string
+
+    CreateScenarioInput:
+      type: object
+      required: [name, assessmentId, parameters]
+      properties:
+        name:
+          type: string
+        assessmentId:
+          type: integer
+        parameters:
+          $ref: "#/components/schemas/ScenarioParameters"
+        notes:
+          type: ["string", "null"]
+
+    CompareScenariosInput:
+      type: object
+      required: [scenarioIds]
+      properties:
+        scenarioIds:
+          type: array
+          items:
+            type: integer
+
+    ScenarioComparisonValue:
+      type: object
+      required: [scenarioId, name, regionName, value]
+      properties:
+        scenarioId:
+          type: integer
+        name:
+          type: string
+        regionName:
+          type: string
+        value:
+          type: number
+
+    ScenarioComparisonMetric:
+      type: object
+      required: [key, label, unit, higherIsWorse, values]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        unit:
+          type: string
+        higherIsWorse:
+          type: boolean
+        values:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioComparisonValue"
+
+    ScenarioComparison:
+      type: object
+      required: [scenarios, metrics]
+      properties:
+        scenarios:
+          type: array
+          items:
+            $ref: "#/components/schemas/Scenario"
+        metrics:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioComparisonMetric"
+
+
+    DataSource:
+      type: object
+      required: [id, code, name, agency, category, integrationType, status, updateFrequency, recordsAvailable, completeness, duplicateRate, isSimulated]
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        name:
+          type: string
+        agency:
+          type: string
+        category:
+          type: string
+        integrationType:
+          type: string
+        status:
+          type: string
+        endpointUrl:
+          type: ["string", "null"]
+        updateFrequency:
+          type: string
+        lastSyncAt:
+          type: ["string", "null"]
+        lastSyncStatus:
+          type: ["string", "null"]
+        recordsAvailable:
+          type: integer
+        completeness:
+          type: number
+        duplicateRate:
+          type: number
+        owner:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        isSimulated:
+          type: boolean
+
+    UpdateDataSourceInput:
+      type: object
+      properties:
+        status:
+          type: string
+        description:
+          type: string
+        updateFrequency:
+          type: string
+
+    SyncResult:
+      type: object
+      required: [outcome, message, source]
+      properties:
+        outcome:
+          type: string
+          enum: [synced, simulated, unavailable]
+        message:
+          type: string
+        recordsProcessed:
+          type: integer
+        durationMs:
+          type: integer
+        source:
+          $ref: "#/components/schemas/DataSource"
+
+    IntegrationLogEntry:
+      type: object
+      required: [id, sourceId, level, event, message, createdAt]
+      properties:
+        id:
+          type: integer
+        sourceId:
+          type: integer
+        sourceName:
+          type: string
+        level:
+          type: string
+        event:
+          type: string
+        message:
+          type: string
+        recordsProcessed:
+          type: integer
+        invalidRecords:
+          type: integer
+        durationMs:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+
+    DataQualityCheck:
+      type: object
+      required: [id, label, status, detail, affected]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        status:
+          type: string
+          enum: [pass, warn, fail]
+        detail:
+          type: string
+        affected:
+          type: integer
+
+    DataQualityDataset:
+      type: object
+      required: [sourceId, code, name, records, completeness, duplicateRate, isSimulated]
+      properties:
+        sourceId:
+          type: integer
+        code:
+          type: string
+        name:
+          type: string
+        records:
+          type: integer
+        completeness:
+          type: number
+        duplicateRate:
+          type: number
+        isSimulated:
+          type: boolean
+
+    DataQualityReport:
+      type: object
+      required: [generatedAt, summary, checks, datasets]
+      properties:
+        generatedAt:
+          type: string
+        summary:
+          type: object
+          properties:
+            total:
+              type: integer
+            passed:
+              type: integer
+            warnings:
+              type: integer
+            failed:
+              type: integer
+        checks:
+          type: array
+          items:
+            $ref: "#/components/schemas/DataQualityCheck"
+        datasets:
+          type: array
+          items:
+            $ref: "#/components/schemas/DataQualityDataset"
+
+
+    MitigationAction:
+      type: object
+      required: [id, planId, title, category, responsibleAgency, budget, progress, status, priorityScore, criteria]
+      properties:
+        id:
+          type: integer
+        planId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        category:
+          type: string
+        responsibleAgency:
+          type: string
+        startDate:
+          type: ["string", "null"]
+        endDate:
+          type: ["string", "null"]
+        budget:
+          type: number
+        progress:
+          type: integer
+        status:
+          type: string
+        priorityScore:
+          type: number
+        criteria:
+          type: object
+          additionalProperties:
+            type: number
+
+    MitigationPlan:
+      type: object
+      required: [id, title, regionName, province, hazardType, status, leadAgency, budgetTotal, version, actionCount, progress, updatedAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        regionName:
+          type: string
+        province:
+          type: string
+        hazardType:
+          type: string
+        assessmentId:
+          type: ["integer", "null"]
+        status:
+          type: string
+        publicSummary:
+          type: ["string", "null"]
+        leadAgency:
+          type: string
+        budgetTotal:
+          type: number
+        timelineStart:
+          type: ["string", "null"]
+        timelineEnd:
+          type: ["string", "null"]
+        version:
+          type: integer
+        publishedAt:
+          type: ["string", "null"]
+        updatedAt:
+          type: string
+        actionCount:
+          type: integer
+        completedActions:
+          type: integer
+        progress:
+          type: number
+
+    MitigationPlanDetail:
+      type: object
+      required: [id, title, regionName, province, hazardType, status, leadAgency, budgetTotal, version, updatedAt, actions]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        regionName:
+          type: string
+        province:
+          type: string
+        hazardType:
+          type: string
+        assessmentId:
+          type: ["integer", "null"]
+        status:
+          type: string
+        publicSummary:
+          type: ["string", "null"]
+        internalNotes:
+          type: ["string", "null"]
+        leadAgency:
+          type: string
+        budgetTotal:
+          type: number
+        timelineStart:
+          type: ["string", "null"]
+        timelineEnd:
+          type: ["string", "null"]
+        version:
+          type: integer
+        createdBy:
+          type: ["integer", "null"]
+        reviewedAt:
+          type: ["string", "null"]
+        approvedAt:
+          type: ["string", "null"]
+        publishedAt:
+          type: ["string", "null"]
+        updatedAt:
+          type: string
+        riskScore:
+          type: ["number", "null"]
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/MitigationAction"
+
+    CreateMitigationPlanInput:
+      type: object
+      required: [title, regionName, hazardType, leadAgency]
+      properties:
+        title:
+          type: string
+        regionName:
+          type: string
+        province:
+          type: string
+        hazardType:
+          type: string
+        assessmentId:
+          type: ["integer", "null"]
+        leadAgency:
+          type: string
+        publicSummary:
+          type: ["string", "null"]
+        internalNotes:
+          type: ["string", "null"]
+        budgetTotal:
+          type: number
+        timelineStart:
+          type: ["string", "null"]
+        timelineEnd:
+          type: ["string", "null"]
+
+    UpdateMitigationPlanInput:
+      type: object
+      properties:
+        title:
+          type: string
+        publicSummary:
+          type: ["string", "null"]
+        internalNotes:
+          type: ["string", "null"]
+        leadAgency:
+          type: string
+        budgetTotal:
+          type: number
+        timelineStart:
+          type: ["string", "null"]
+        timelineEnd:
+          type: ["string", "null"]
+
+    TransitionPlanInput:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [submit_review, approve, publish, return_draft, archive]
+        note:
+          type: ["string", "null"]
+
+    MitigationRecommendation:
+      type: object
+      required: [assessmentId, regionName, province, hazardType, riskScore, riskClass, priority, rationale, suggestedInterventions, requiresVerification]
+      properties:
+        assessmentId:
+          type: integer
+        regionName:
+          type: string
+        province:
+          type: string
+        hazardType:
+          type: string
+        riskScore:
+          type: number
+        riskClass:
+          type: string
+        priority:
+          type: string
+          enum: [immediate, high, planned, monitor]
+        rationale:
+          type: string
+        requiresVerification:
+          type: boolean
+        existingPlanId:
+          type: ["integer", "null"]
+        existingPlanStatus:
+          type: ["string", "null"]
+        suggestedInterventions:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+              category:
+                type: string
+              rationale:
+                type: string
+
+
+    Facility:
+      type: object
+      required: [id, name, type, regionName, province, latitude, longitude, capacity, occupancy, status, isPublic]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+        regionName:
+          type: string
+        province:
+          type: string
+        address:
+          type: ["string", "null"]
+        latitude:
+          type: number
+        longitude:
+          type: number
+        capacity:
+          type: integer
+        occupancy:
+          type: integer
+        amenities:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+        isPublic:
+          type: boolean
+        contact:
+          type: ["string", "null"]
+        operatingAgency:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        verifiedAt:
+          type: ["string", "null"]
+
+    UpdateFacilityInput:
+      type: object
+      properties:
+        status:
+          type: string
+        occupancy:
+          type: integer
+        notes:
+          type: string
+
+    ResourceItem:
+      type: object
+      required: [id, itemName, category, quantity, unit, regionName, condition, allocationStatus, lastUpdated]
+      properties:
+        id:
+          type: integer
+        itemName:
+          type: string
+        category:
+          type: string
+        quantity:
+          type: integer
+        unit:
+          type: string
+        regionName:
+          type: string
+        facilityId:
+          type: ["integer", "null"]
+        facilityName:
+          type: ["string", "null"]
+        condition:
+          type: string
+        allocationStatus:
+          type: string
+        notes:
+          type: ["string", "null"]
+        lastUpdated:
+          type: string
+
+    UpdateResourceInput:
+      type: object
+      properties:
+        quantity:
+          type: integer
+        condition:
+          type: string
+        allocationStatus:
+          type: string
+        notes:
+          type: string
+
+
+    PublicMitigationPlan:
+      type: object
+      required: [id, title, regionName, province, hazardType, leadAgency, publishedAt, version]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        regionName:
+          type: string
+        province:
+          type: string
+        hazardType:
+          type: string
+        publicSummary:
+          type: ["string", "null"]
+        leadAgency:
+          type: string
+        budgetTotal:
+          type: number
+        timelineStart:
+          type: ["string", "null"]
+        timelineEnd:
+          type: ["string", "null"]
+        publishedAt:
+          type: ["string", "null"]
+        version:
+          type: integer
+        actionCount:
+          type: integer
+        progress:
+          type: number
+
+    PublicMitigationAction:
+      type: object
+      required: [id, title, category, responsibleAgency, progress, status]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        category:
+          type: string
+        responsibleAgency:
+          type: string
+        startDate:
+          type: ["string", "null"]
+        endDate:
+          type: ["string", "null"]
+        progress:
+          type: integer
+        status:
+          type: string
+
+    PublicMitigationPlanDetail:
+      type: object
+      required: [id, title, regionName, province, hazardType, leadAgency, actions]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        regionName:
+          type: string
+        province:
+          type: string
+        hazardType:
+          type: string
+        publicSummary:
+          type: ["string", "null"]
+        leadAgency:
+          type: string
+        budgetTotal:
+          type: number
+        timelineStart:
+          type: ["string", "null"]
+        timelineEnd:
+          type: ["string", "null"]
+        publishedAt:
+          type: ["string", "null"]
+        version:
+          type: integer
+        progress:
+          type: number
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicMitigationAction"
+
+    PublicFacility:
+      type: object
+      required: [id, name, type, regionName, latitude, longitude, status]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+        regionName:
+          type: string
+        province:
+          type: string
+        address:
+          type: ["string", "null"]
+        latitude:
+          type: number
+        longitude:
+          type: number
+        capacity:
+          type: integer
+        amenities:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+        contact:
+          type: ["string", "null"]
+        operatingAgency:
+          type: ["string", "null"]
+        verifiedAt:
+          type: ["string", "null"]
+
+    PublicGuideline:
+      type: object
+      required: [id, title, category, summary, source, updatedAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        category:
+          type: string
+        audience:
+          type: string
+        summary:
+          type: string
+        steps:
+          type: array
+          items:
+            type: string
+        source:
+          type: string
+        sourceUrl:
+          type: ["string", "null"]
+        updatedAt:
+          type: string
+
+    PublicOverview:
+      type: object
+      required: [publishedPlans, regionsCovered, shelters, totalShelterCapacity, guidelines]
+      properties:
+        publishedPlans:
+          type: integer
+        regionsCovered:
+          type: integer
+        shelters:
+          type: integer
+        totalShelterCapacity:
+          type: integer
+        guidelines:
+          type: integer
+        lastPublishedAt:
+          type: ["string", "null"]
+
+    PublicEvacuationRoute:
+      type: object
+      required: [id, name, routeCode, originName, originLatitude, originLongitude, destinationName, destinationLatitude, destinationLongitude, regionName, province, hazardType, routeType, distanceKm, estimatedTimeMinutes, isAccessible, hazardExposure, routeStatus, routeGeometry, version]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        routeCode:
+          type: string
+        originName:
+          type: string
+        originLatitude:
+          type: number
+        originLongitude:
+          type: number
+        destinationName:
+          type: string
+        destinationLatitude:
+          type: number
+        destinationLongitude:
+          type: number
+        regionName:
+          type: string
+        province:
+          type: string
+        hazardType:
+          type: string
+        routeType:
+          type: string
+        distanceKm:
+          type: number
+        estimatedTimeMinutes:
+          type: integer
+        roadSurface:
+          type: ["string", "null"]
+        isAccessible:
+          type: boolean
+        hazardExposure:
+          type: string
+        routeStatus:
+          type: string
+        routeGeometry:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+        publicDescription:
+          type: ["string", "null"]
+        publishedAt:
+          type: ["string", "null"]
+        version:
+          type: integer
+
+    PublicEvacuationRouteDetail:
+      allOf:
+        - $ref: "#/components/schemas/PublicEvacuationRoute"
+        - type: object
+          properties:
+            segments:
+              type: array
+              items:
+                type: object
+                required: [id, segmentOrder, name, startLatitude, startLongitude, endLatitude, endLongitude, distanceKm, roadCondition, isBlocked]
+                properties:
+                  id:
+                    type: integer
+                  segmentOrder:
+                    type: integer
+                  name:
+                    type: string
+                  startLatitude:
+                    type: number
+                  startLongitude:
+                    type: number
+                  endLatitude:
+                    type: number
+                  endLongitude:
+                    type: number
+                  distanceKm:
+                    type: number
+                  roadCondition:
+                    type: string
+                  isBlocked:
+                    type: boolean
+            destinationFacility:
+              type: ["object", "null"]
+              properties:
+                id:
+                  type: integer
+                name:
+                  type: string
+                type:
+                  type: string
+                capacity:
+                  type: integer
+                address:
+                  type: ["string", "null"]
+
+    EvacuationRouteFull:
+      type: object
+      required: [id, name, routeCode, originName, originLatitude, originLongitude, destinationName, destinationLatitude, destinationLongitude, regionName, province, hazardType, routeType, distanceKm, estimatedTimeMinutes, maxCapacityPersons, isAccessible, hazardExposure, routeStatus, routeGeometry, version, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        routeCode:
+          type: string
+        originName:
+          type: string
+        originLatitude:
+          type: number
+        originLongitude:
+          type: number
+        destinationName:
+          type: string
+        destinationLatitude:
+          type: number
+        destinationLongitude:
+          type: number
+        destinationFacilityId:
+          type: ["integer", "null"]
+        regionName:
+          type: string
+        province:
+          type: string
+        hazardType:
+          type: string
+        routeType:
+          type: string
+        distanceKm:
+          type: number
+        estimatedTimeMinutes:
+          type: integer
+        maxCapacityPersons:
+          type: integer
+        elevationGainM:
+          type: ["number", "null"]
+        roadSurface:
+          type: ["string", "null"]
+        isAccessible:
+          type: boolean
+        hazardExposure:
+          type: string
+        routeStatus:
+          type: string
+        routeGeometry:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+        evaluationNotes:
+          type: ["string", "null"]
+        publicDescription:
+          type: ["string", "null"]
+        createdBy:
+          type: ["integer", "null"]
+        reviewedBy:
+          type: ["integer", "null"]
+        reviewedAt:
+          type: ["string", "null"]
+        approvedBy:
+          type: ["integer", "null"]
+        approvedAt:
+          type: ["string", "null"]
+        publishedAt:
+          type: ["string", "null"]
+        version:
+          type: integer
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    EvacuationRouteDetail:
+      allOf:
+        - $ref: "#/components/schemas/EvacuationRouteFull"
+        - type: object
+          properties:
+            segments:
+              type: array
+              items:
+                $ref: "#/components/schemas/RouteSegmentItem"
+            verifications:
+              type: array
+              items:
+                $ref: "#/components/schemas/RouteVerificationItem"
+            scenarios:
+              type: array
+              items:
+                $ref: "#/components/schemas/EvacuationScenarioItem"
+            destinationFacility:
+              type: ["object", "null"]
+              properties:
+                id:
+                  type: integer
+                name:
+                  type: string
+                type:
+                  type: string
+                regionName:
+                  type: string
+                province:
+                  type: string
+                address:
+                  type: ["string", "null"]
+                latitude:
+                  type: number
+                longitude:
+                  type: number
+                capacity:
+                  type: integer
+                occupancy:
+                  type: integer
+                status:
+                  type: string
+                isPublic:
+                  type: boolean
+                contact:
+                  type: ["string", "null"]
+                operatingAgency:
+                  type: ["string", "null"]
+
+    CreateEvacuationRouteInput:
+      type: object
+      required: [name, routeCode, originName, originLatitude, originLongitude, destinationName, destinationLatitude, destinationLongitude, regionName, hazardType]
+      properties:
+        name:
+          type: string
+        routeCode:
+          type: string
+        originName:
+          type: string
+        originLatitude:
+          type: number
+        originLongitude:
+          type: number
+        destinationName:
+          type: string
+        destinationLatitude:
+          type: number
+        destinationLongitude:
+          type: number
+        destinationFacilityId:
+          type: ["integer", "null"]
+        regionName:
+          type: string
+        province:
+          type: string
+        hazardType:
+          type: string
+        routeType:
+          type: string
+        distanceKm:
+          type: number
+        estimatedTimeMinutes:
+          type: integer
+        maxCapacityPersons:
+          type: integer
+        elevationGainM:
+          type: number
+        roadSurface:
+          type: ["string", "null"]
+        isAccessible:
+          type: boolean
+        hazardExposure:
+          type: string
+        routeGeometry:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+        evaluationNotes:
+          type: ["string", "null"]
+        publicDescription:
+          type: ["string", "null"]
+
+    UpdateEvacuationRouteInput:
+      type: object
+      properties:
+        name:
+          type: string
+        routeCode:
+          type: string
+        originName:
+          type: string
+        originLatitude:
+          type: number
+        originLongitude:
+          type: number
+        destinationName:
+          type: string
+        destinationLatitude:
+          type: number
+        destinationLongitude:
+          type: number
+        destinationFacilityId:
+          type: ["integer", "null"]
+        regionName:
+          type: string
+        province:
+          type: string
+        hazardType:
+          type: string
+        routeType:
+          type: string
+        distanceKm:
+          type: number
+        estimatedTimeMinutes:
+          type: integer
+        maxCapacityPersons:
+          type: integer
+        elevationGainM:
+          type: number
+        roadSurface:
+          type: ["string", "null"]
+        isAccessible:
+          type: boolean
+        hazardExposure:
+          type: string
+        routeGeometry:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+        evaluationNotes:
+          type: ["string", "null"]
+        publicDescription:
+          type: ["string", "null"]
+
+    TransitionRouteInput:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [submit_analysis, submit_verification, submit_review, approve, publish, return_draft, archive]
+
+    RouteSegmentItem:
+      type: object
+      required: [id, routeId, segmentOrder, name, startLatitude, startLongitude, endLatitude, endLongitude, distanceKm, roadCondition, isBlocked, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        routeId:
+          type: integer
+        segmentOrder:
+          type: integer
+        name:
+          type: string
+        startLatitude:
+          type: number
+        startLongitude:
+          type: number
+        endLatitude:
+          type: number
+        endLongitude:
+          type: number
+        distanceKm:
+          type: number
+        roadCondition:
+          type: string
+        roadWidth:
+          type: ["string", "null"]
+        hazardNotes:
+          type: ["string", "null"]
+        isBlocked:
+          type: boolean
+        blockageReason:
+          type: ["string", "null"]
+        lastInspectedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    CreateRouteSegmentInput:
+      type: object
+      required: [name, startLatitude, startLongitude, endLatitude, endLongitude]
+      properties:
+        segmentOrder:
+          type: integer
+        name:
+          type: string
+        startLatitude:
+          type: number
+        startLongitude:
+          type: number
+        endLatitude:
+          type: number
+        endLongitude:
+          type: number
+        distanceKm:
+          type: number
+        roadCondition:
+          type: string
+        roadWidth:
+          type: ["string", "null"]
+        hazardNotes:
+          type: ["string", "null"]
+        isBlocked:
+          type: boolean
+        blockageReason:
+          type: ["string", "null"]
+        lastInspectedAt:
+          type: ["string", "null"]
+
+    UpdateRouteSegmentInput:
+      type: object
+      properties:
+        segmentOrder:
+          type: integer
+        name:
+          type: string
+        startLatitude:
+          type: number
+        startLongitude:
+          type: number
+        endLatitude:
+          type: number
+        endLongitude:
+          type: number
+        distanceKm:
+          type: number
+        roadCondition:
+          type: string
+        roadWidth:
+          type: ["string", "null"]
+        hazardNotes:
+          type: ["string", "null"]
+        isBlocked:
+          type: boolean
+        blockageReason:
+          type: ["string", "null"]
+        lastInspectedAt:
+          type: ["string", "null"]
+
+    RouteVerificationItem:
+      type: object
+      required: [id, routeId, inspectorId, inspectorName, inspectionDate, overallCondition, roadAccessible, signageAdequate, shelterReady, lightingAvailable, drainageAdequate, findings, geotagPhotos, createdAt]
+      properties:
+        id:
+          type: integer
+        routeId:
+          type: integer
+        inspectorId:
+          type: integer
+        inspectorName:
+          type: string
+        inspectionDate:
+          type: string
+        overallCondition:
+          type: string
+        roadAccessible:
+          type: boolean
+        signageAdequate:
+          type: boolean
+        shelterReady:
+          type: boolean
+        lightingAvailable:
+          type: boolean
+        drainageAdequate:
+          type: boolean
+        findings:
+          type: string
+        recommendations:
+          type: ["string", "null"]
+        geotagPhotos:
+          type: array
+          items:
+            type: object
+            required: [url, latitude, longitude, caption]
+            properties:
+              url:
+                type: string
+              latitude:
+                type: number
+              longitude:
+                type: number
+              caption:
+                type: string
+        gpsTrack:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+        createdAt:
+          type: string
+
+    CreateRouteVerificationInput:
+      type: object
+      required: [overallCondition, findings]
+      properties:
+        inspectorName:
+          type: string
+        inspectionDate:
+          type: string
+        overallCondition:
+          type: string
+        roadAccessible:
+          type: boolean
+        signageAdequate:
+          type: boolean
+        shelterReady:
+          type: boolean
+        lightingAvailable:
+          type: boolean
+        drainageAdequate:
+          type: boolean
+        findings:
+          type: string
+        recommendations:
+          type: ["string", "null"]
+        geotagPhotos:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+              latitude:
+                type: number
+              longitude:
+                type: number
+              caption:
+                type: string
+        gpsTrack:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+
+    EvacuationScenarioParameters:
+      type: object
+      properties:
+        rainfallIntensityMm:
+          type: number
+        groundSaturationPercent:
+          type: number
+        earthquakeMagnitude:
+          type: number
+        tsunamiWaveHeightM:
+          type: number
+        estimatedArrivalTimeMin:
+          type: number
+        targetPopulation:
+          type: integer
+        blockedRoadProbability:
+          type: number
+        evacuationMode:
+          type: string
+
+    EvacuationScenarioItem:
+      type: object
+      required: [id, name, hazardType, regionName, parameters, candidateRoutes, status, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        hazardType:
+          type: string
+        regionName:
+          type: string
+        parameters:
+          $ref: "#/components/schemas/EvacuationScenarioParameters"
+        candidateRoutes:
+          type: array
+          items:
+            type: object
+            required: [name, score, travelTime, hazardExposure, notes]
+            properties:
+              routeId:
+                type: integer
+              name:
+                type: string
+              score:
+                type: number
+              travelTime:
+                type: number
+              hazardExposure:
+                type: string
+              notes:
+                type: string
+        recommendation:
+          type: ["string", "null"]
+        status:
+          type: string
+        createdBy:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+
+    CreateEvacuationScenarioInput:
+      type: object
+      required: [name, hazardType, regionName]
+      properties:
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        hazardType:
+          type: string
+        regionName:
+          type: string
+        parameters:
+          $ref: "#/components/schemas/EvacuationScenarioParameters"
+        candidateRoutes:
+          type: array
+          items:
+            type: object
+            properties:
+              routeId:
+                type: integer
+              name:
+                type: string
+              score:
+                type: number
+              travelTime:
+                type: number
+              hazardExposure:
+                type: string
+              notes:
+                type: string
+        recommendation:
+          type: ["string", "null"]
+        status:
+          type: string
+
+
+

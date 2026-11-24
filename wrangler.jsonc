@@ -1,0 +1,54 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "landsafe",
+  "main": "cloudflare/worker.ts",
+  "compatibility_date": "2025-02-01",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "assets": {
+    "directory": "./artifacts/landsafe/dist/public",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "html_handling": "auto-trailing-slash"
+  },
+  "vars": {
+    "ENVIRONMENT": "production",
+    "APP_NAME": "LANDSAFE",
+    // PRODUCTION API ORIGIN — must point to the live LANDSAFE backend (Express) origin.
+    // The worker proxies /api/* to this value. Do NOT use localhost in production.
+    // https://api.landsafe.bpbd.go.id is the intended origin, but it MUST be provisioned first:
+    //   1. DNS A/CNAME record resolving to the backend (or a Cloudflare Tunnel hostname).
+    //   2. The Express backend reachable and running on that host.
+    //   3. TLS certificate valid for the hostname.
+    // Until provisioned, /api/* requests return a clear 502 (worker fails closed).
+    // Local development uses .dev.vars (API_ORIGIN=http://127.0.0.1:5000), gitignored.
+    "API_ORIGIN": "https://api.landsafe.bpbd.go.id"
+  },
+  "observability": {
+    "enabled": true
+  }
+
+  // =========================================================================
+  // CLOUDFLARE HYPERDRIVE CONFIGURATION (For direct PostgreSQL Edge Access)
+  // =========================================================================
+  // To enable Cloudflare Hyperdrive connection pooling for your PostgreSQL database:
+  // 1. Run: npx wrangler hyperdrive create landsafe-db --connection-string="postgres://user:password@host:5432/dbname"
+  // 2. Uncomment the block below and replace <YOUR_HYPERDRIVE_ID> with the generated ID:
+  //
+  // "hyperdrive": [
+  //   {
+  //     "binding": "HYPERDRIVE",
+  //     "id": "<YOUR_HYPERDRIVE_ID>"
+  //   }
+  // ],
+
+  // =========================================================================
+  // CLOUDFLARE WORKERS AI (Optional: Edge LLM Acceleration for LIA Assistant)
+  // =========================================================================
+  // To use Cloudflare Workers AI natively at the edge for LIA assistant queries:
+  //
+  // "ai": {
+  //   "binding": "AI"
+  // }
+}

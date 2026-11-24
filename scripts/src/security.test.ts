@@ -67,13 +67,35 @@ test("missing, demo, invalid, expired, and modified tokens are rejected", async 
 });
 
 test("protected routes and measurement ingestion reject anonymous requests", async () => {
-  for (const path of ["/users", "/dashboard/stats", "/alerts", "/devices", "/reports", "/measurements"]) {
+  // Admin/operator-only surfaces stay behind authentication.
+  for (const path of ["/users", "/audit", "/auth/me", "/dashboard/stats", "/dashboard/activity",
+    "/dashboard/risk-summary", "/devices", "/reports", "/sensors", "/measurements"]) {
     const response = await fetch(`${base}${path}`);
     assert.equal(response.status, 401, path);
   }
   const response = await fetch(`${base}/measurements`, { method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ sensorId: 1, timestamp: new Date().toISOString(), rainfall: 1 }) });
   assert.equal(response.status, 401);
+});
+
+test("public read endpoints are reachable without a session", async () => {
+  // Anonymous visitors may read monitoring locations, alerts, and AI risk analysis.
+  // The database is unreachable in this sandbox, so success is asserted as
+  // "not an authentication rejection" rather than a specific payload.
+  for (const path of ["/locations", "/locations/1", "/alerts", "/alerts/1",
+    "/ai/risk-analysis", "/ai/risk-analysis/1"]) {
+    const response = await fetch(`${base}${path}`);
+    assert.notEqual(response.status, 401, path);
+    assert.notEqual(response.status, 403, path);
+  }
+});
+
+test("public read endpoints still reject write operations anonymously", async () => {
+  for (const [path, method] of [["/locations", "POST"], ["/alerts/1", "PATCH"]] as const) {
+    const response = await fetch(`${base}${path}`, { method, headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "x", district: "y", latitude: 0, longitude: 0, status: "acknowledged" }) });
+    assert.equal(response.status, 401, `${method} ${path}`);
+  }
 });
 
 test("sensor tokens cannot authenticate a different sensor", async () => {

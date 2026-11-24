@@ -34,7 +34,7 @@ export default function DashboardMap({ locations }: { locations: Location[] }) {
   const valid = locations.filter(loc => Number.isFinite(loc.latitude) && Number.isFinite(loc.longitude));
   return (
     <div className="absolute inset-0">
-      <MapContainer center={CENTER} zoom={8} zoomControl={false} scrollWheelZoom={false} className="h-full w-full" style={{ background: '#e8efe8' }}>
+      <MapContainer center={CENTER} zoom={8} zoomControl={false} scrollWheelZoom={false} className="h-full w-full isolate" style={{ background: '#e8efe8' }}>
         <MapViewport locations={valid} />
         <TileLayer
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"

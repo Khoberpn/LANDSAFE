@@ -10,7 +10,7 @@ const metrics = [
   { key: 'rainfall', label: 'Curah hujan', unit: 'mm', base: 8, swing: 6 },
   { key: 'soilMoisture', label: 'Kelembapan tanah', unit: '%', base: 62, swing: 10 },
   { key: 'tiltAngle', label: 'Kemiringan tanah', unit: 'derajat', base: 0.35, swing: 0.08 },
-  { key: 'temperature', label: 'Suhu', unit: 'C', base: 28, swing: 3 },
+  { key: 'temperature', label: 'Suhu', unit: '°C', base: 28, swing: 3 },
   { key: 'humidity', label: 'Kelembapan udara', unit: '%', base: 74, swing: 9 },
   { key: 'batteryVoltage', label: 'Tegangan baterai', unit: 'V', base: 12.3, swing: 0.3 },
   { key: 'signalQuality', label: 'Kualitas sinyal', unit: '%', base: 79, swing: 12 },
@@ -86,76 +86,82 @@ export default function SensorAnalytics() {
     : 'Aktif';
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="rounded-xl border border-warning/30 bg-warning/10 p-3 sm:p-4 text-xs sm:text-sm">
         Kontrol daya fisik ESP32 belum tersedia. Kondisi sensor berasal dari API; grafik pada mode Data contoh adalah simulasi dan tidak tersimpan sebagai pengukuran.
       </div>
-      <div className="grid gap-4 lg:grid-cols-3">
-        <label className="rounded-xl border border-border bg-card p-4 text-sm">
-          <span className="mb-2 flex items-center gap-2 font-semibold"><MapPin className="h-4 w-4" /> Lokasi</span>
-          <select value={locationId ?? ''} onChange={event => { setLocationId(Number(event.target.value)); setSensorId(null); }} className="min-h-11 w-full rounded-md border border-border bg-background px-3">
+      <div className="grid gap-3 sm:gap-4 lg:grid-cols-3">
+        <label className="rounded-xl border border-border bg-card p-3 sm:p-4 text-sm block">
+          <span className="mb-2 flex items-center gap-2 font-semibold"><MapPin className="h-4 w-4 text-primary" /> Lokasi</span>
+          <select value={locationId ?? ''} onChange={event => { setLocationId(Number(event.target.value)); setSensorId(null); }} className="min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm">
             {locations?.map(loc => <option key={loc.id} value={loc.id}>{loc.name}</option>)}
           </select>
         </label>
-        <label className="rounded-xl border border-border bg-card p-4 text-sm">
-          <span className="mb-2 flex items-center gap-2 font-semibold"><Activity className="h-4 w-4" /> Sensor</span>
-          <select value={sensorId ?? ''} onChange={event => setSensorId(Number(event.target.value))} disabled={!sensors?.length} className="min-h-11 w-full rounded-md border border-border bg-background px-3">
+        <label className="rounded-xl border border-border bg-card p-3 sm:p-4 text-sm block">
+          <span className="mb-2 flex items-center gap-2 font-semibold"><Activity className="h-4 w-4 text-primary" /> Sensor</span>
+          <select value={sensorId ?? ''} onChange={event => setSensorId(Number(event.target.value))} disabled={!sensors?.length} className="min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm">
             {sensors?.map(sensor => <option key={sensor.id} value={sensor.id}>{sensor.sensorCode} / {sensor.sensorType.replaceAll('_', ' ')}</option>)}
           </select>
         </label>
-        <div className="rounded-xl border border-border bg-card p-4 text-sm">
-          <span className="font-semibold">Kondisi sensor dari API</span>
-          <p className="mt-2 text-lg font-semibold">{condition}</p>
-          <p className="text-muted-foreground">Status tercatat: {selected?.status ?? '-'}</p>
+        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 text-sm">
+          <span className="font-semibold text-muted-foreground uppercase text-xs tracking-wider">Kondisi sensor dari API</span>
+          <p className="mt-1 sm:mt-2 text-base sm:text-lg font-semibold">{condition}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Status tercatat: {selected?.status ?? '-'}</p>
         </div>
       </div>
-      {sensorsLoading && <p role="status">Memuat sensor...</p>}
-      {sensorsError && <p role="alert" className="text-destructive">Gagal memuat daftar sensor.</p>}
-      {sensors && sensors.length === 0 && <p>Tidak ada sensor di lokasi ini.</p>}
+      {sensorsLoading && <p role="status" className="text-xs sm:text-sm text-muted-foreground">Memuat sensor...</p>}
+      {sensorsError && <p role="alert" className="text-xs sm:text-sm text-destructive">Gagal memuat daftar sensor.</p>}
+      {sensors && sensors.length === 0 && <p className="text-xs sm:text-sm text-muted-foreground">Tidak ada sensor di lokasi ini.</p>}
       {selected && (
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-xl border border-border bg-card p-4"><span className="flex items-center gap-2 text-sm text-muted-foreground"><Clock className="h-4 w-4" /> Komunikasi terakhir</span><strong className="mt-2 block">{selected.lastSeen ? new Date(selected.lastSeen).toLocaleString('id-ID') : 'Belum ada'}</strong></div>
-          <div className="rounded-xl border border-border bg-card p-4"><span className="flex items-center gap-2 text-sm text-muted-foreground"><Battery className="h-4 w-4" /> Baterai tercatat</span><strong className="mt-2 block">{selected.batteryLevel}%</strong></div>
-          <div className="rounded-xl border border-border bg-card p-4"><span className="flex items-center gap-2 text-sm text-muted-foreground"><Wifi className="h-4 w-4" /> Sinyal</span><strong className="mt-2 block">{selected.signalStrength}%</strong></div>
+        <div className="grid gap-2.5 sm:gap-4 grid-cols-1 sm:grid-cols-3">
+          <div className="rounded-xl border border-border bg-card p-3 sm:p-4"><span className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground"><Clock className="h-4 w-4" /> Komunikasi terakhir</span><strong className="mt-1 sm:mt-2 block text-sm sm:text-base">{selected.lastSeen ? new Date(selected.lastSeen).toLocaleString('id-ID') : 'Belum ada'}</strong></div>
+          <div className="rounded-xl border border-border bg-card p-3 sm:p-4"><span className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground"><Battery className="h-4 w-4" /> Baterai tercatat</span><strong className="mt-1 sm:mt-2 block text-sm sm:text-base">{selected.batteryLevel}%</strong></div>
+          <div className="rounded-xl border border-border bg-card p-3 sm:p-4"><span className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground"><Wifi className="h-4 w-4" /> Sinyal</span><strong className="mt-1 sm:mt-2 block text-sm sm:text-base">{selected.signalStrength}%</strong></div>
         </div>
       )}
-      <div className="rounded-xl border border-border bg-card p-5">
-        <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+      <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
+        <div className="mb-4 sm:mb-5 flex flex-wrap items-end justify-between gap-3 sm:gap-4">
           <div>
-            <h2 className="text-lg font-semibold">Grafik pengukuran</h2>
-            <p className="text-sm text-muted-foreground">{demoMode ? 'Data contoh deterministik untuk pratinjau.' : 'Pembacaan asli dari API LANDSAFE.'}</p>
+            <h2 className="text-base sm:text-lg font-semibold">Grafik pengukuran</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground">{demoMode ? 'Data contoh deterministik untuk pratinjau.' : 'Pembacaan asli dari API LANDSAFE.'}</p>
           </div>
-          <div className="flex rounded-lg border border-border p-1" role="group" aria-label="Sumber data grafik">
-            <button type="button" onClick={() => setDemoMode(true)} aria-pressed={demoMode} className={'min-h-11 rounded-md px-4 text-sm ' + (demoMode ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary')}>Data contoh</button>
-            <button type="button" onClick={() => setDemoMode(false)} aria-pressed={!demoMode} className={'min-h-11 rounded-md px-4 text-sm ' + (!demoMode ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary')}>Data asli</button>
+          <div className="flex rounded-lg border border-border p-1 w-full sm:w-auto" role="group" aria-label="Sumber data grafik">
+            <button type="button" onClick={() => setDemoMode(true)} aria-pressed={demoMode} className={'flex-1 sm:flex-initial min-h-10 rounded-md px-3 sm:px-4 text-xs sm:text-sm font-medium transition-colors ' + (demoMode ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary')}>Data contoh</button>
+            <button type="button" onClick={() => setDemoMode(false)} aria-pressed={!demoMode} className={'flex-1 sm:flex-initial min-h-10 rounded-md px-3 sm:px-4 text-xs sm:text-sm font-medium transition-colors ' + (!demoMode ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary')}>Data asli</button>
           </div>
         </div>
-        <div className="mb-4 flex flex-wrap items-end gap-3">
-          <label className="text-sm">Pengukuran
-            <select value={metric} onChange={event => setMetric(event.target.value as MetricKey)} className="mt-1 block min-h-11 rounded-md border border-border bg-background px-3">
+        <div className="mb-4 flex flex-wrap items-end gap-2.5 sm:gap-3">
+          <label className="text-xs sm:text-sm flex-1 sm:flex-initial min-w-[140px]">Pengukuran
+            <select value={metric} onChange={event => setMetric(event.target.value as MetricKey)} className="mt-1 block min-h-10 w-full rounded-md border border-border bg-background px-3 text-xs sm:text-sm">
               {metrics.map(item => <option key={item.key} value={item.key}>{item.label}</option>)}
             </select>
           </label>
-          <label className="text-sm">Rentang
-            <select value={hours} onChange={event => setHours(Number(event.target.value))} className="mt-1 block min-h-11 rounded-md border border-border bg-background px-3">
+          <label className="text-xs sm:text-sm flex-1 sm:flex-initial min-w-[110px]">Rentang
+            <select value={hours} onChange={event => setHours(Number(event.target.value))} className="mt-1 block min-h-10 w-full rounded-md border border-border bg-background px-3 text-xs sm:text-sm">
               <option value={1}>1 jam</option><option value={6}>6 jam</option><option value={24}>24 jam</option><option value={168}>7 hari</option>
             </select>
           </label>
-          {demoMode && <span className="rounded-full bg-warning/15 px-3 py-2 text-xs font-semibold text-warning">SIMULASI / BUKAN DATA SENSOR</span>}
+          {demoMode && <span className="rounded-full bg-warning/15 px-2.5 py-1.5 text-[10px] sm:text-xs font-semibold text-warning">SIMULASI / BUKAN DATA SENSOR</span>}
         </div>
         {demoMode || (!readingsLoading && !readingsError) ? (
-          <div className="mb-4 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-lg bg-background p-3 text-sm">Terbaru <strong className="block text-lg">{latest ?? '-'} {latest === undefined ? '' : config.unit}</strong></div>
-            <div className="rounded-lg bg-background p-3 text-sm">Minimum <strong className="block text-lg">{minimum ?? '-'} {minimum === null ? '' : config.unit}</strong></div>
-            <div className="rounded-lg bg-background p-3 text-sm">Maksimum <strong className="block text-lg">{maximum ?? '-'} {maximum === null ? '' : config.unit}</strong></div>
+          <div className="mb-4 grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-3">
+            <div className="rounded-lg bg-background p-2.5 sm:p-3 text-xs sm:text-sm">Terbaru <strong className="block text-base sm:text-lg">{latest ?? '-'} {latest === undefined ? '' : config.unit}</strong></div>
+            <div className="rounded-lg bg-background p-2.5 sm:p-3 text-xs sm:text-sm">Minimum <strong className="block text-base sm:text-lg">{minimum ?? '-'} {minimum === null ? '' : config.unit}</strong></div>
+            <div className="rounded-lg bg-background p-2.5 sm:p-3 text-xs sm:text-sm">Maksimum <strong className="block text-base sm:text-lg">{maximum ?? '-'} {maximum === null ? '' : config.unit}</strong></div>
           </div>
         ) : null}
-        {!demoMode && readingsLoading && <p role="status">Memuat pembacaan...</p>}
-        {!demoMode && readingsError && <p role="alert" className="text-destructive">Gagal memuat pembacaan.</p>}
-        {!demoMode && !readingsLoading && !readingsError && points.length === 0 && <p className="py-12 text-center text-sm text-muted-foreground">Belum ada data {config.label.toLowerCase()} pada rentang ini.</p>}
-        {points.length > 0 && <div className="h-80" aria-label={'Grafik ' + config.label + (demoMode ? ' data contoh' : ' data asli')}>
+        {!demoMode && readingsLoading && <p role="status" className="text-xs sm:text-sm text-muted-foreground py-4">Memuat pembacaan...</p>}
+        {!demoMode && readingsError && <p role="alert" className="text-xs sm:text-sm text-destructive py-4">Gagal memuat pembacaan.</p>}
+        {!demoMode && !readingsLoading && !readingsError && points.length === 0 && <p className="py-8 sm:py-12 text-center text-xs sm:text-sm text-muted-foreground">Belum ada data {config.label.toLowerCase()} pada rentang ini.</p>}
+        {points.length > 0 && <div className="h-64 sm:h-80" aria-label={'Grafik ' + config.label + (demoMode ? ' data contoh' : ' data asli')}>
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={points}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="time" tick={{ fontSize: 11 }} /><YAxis /><Tooltip /><Area type="monotone" dataKey="value" name={config.label} stroke="hsl(var(--primary))" fill="hsl(var(--primary) / 0.2)" /></AreaChart>
+            <AreaChart data={points} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+              <XAxis dataKey="time" tick={{ fontSize: 10 }} interval="preserveStartEnd" minTickGap={30} />
+              <YAxis tick={{ fontSize: 10 }} />
+              <Tooltip />
+              <Area type="monotone" dataKey="value" name={config.label} stroke="hsl(var(--primary))" fill="hsl(var(--primary) / 0.2)" />
+            </AreaChart>
           </ResponsiveContainer>
         </div>}
       </div>

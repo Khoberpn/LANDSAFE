@@ -813,3 +813,1934 @@ export const GetAuditLogsResponseItem = zod.object({
 export const GetAuditLogsResponse = zod.array(GetAuditLogsResponseItem)
 
 
+/**
+ * @summary List regional risk assessments (BPBD only)
+ */
+export const GetRiskAssessmentsQueryParams = zod.object({
+  "hazardType": zod.coerce.string().optional(),
+  "province": zod.coerce.string().optional(),
+  "riskClass": zod.coerce.string().optional(),
+  "verified": zod.coerce.boolean().optional(),
+  "minScore": zod.coerce.number().optional(),
+  "search": zod.coerce.string().optional()
+})
+
+export const GetRiskAssessmentsResponseItem = zod.object({
+  "id": zod.number(),
+  "regionName": zod.string(),
+  "regionCode": zod.string().nullish(),
+  "province": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "extentKm": zod.number().optional(),
+  "hazardType": zod.string(),
+  "hazardIndex": zod.number(),
+  "exposureIndex": zod.number(),
+  "vulnerabilityIndex": zod.number(),
+  "capacityIndex": zod.number(),
+  "riskScore": zod.number(),
+  "riskClass": zod.string(),
+  "population": zod.number(),
+  "exposedPopulation": zod.number(),
+  "exposedFacilities": zod.number(),
+  "exposedRoadsKm": zod.number(),
+  "indicators": zod.object({
+  "hazard": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.number()
+})),
+  "exposure": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.number()
+})),
+  "vulnerability": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.number()
+})),
+  "capacity": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.number()
+}))
+}).optional(),
+  "sources": zod.array(zod.string()).optional(),
+  "verified": zod.boolean(),
+  "verifiedAt": zod.string().nullish(),
+  "assessedAt": zod.string()
+})
+export const GetRiskAssessmentsResponse = zod.array(GetRiskAssessmentsResponseItem)
+
+
+/**
+ * @summary Aggregate risk indicators across all assessed regions
+ */
+export const GetRiskSummaryResponse = zod.object({
+  "totalAssessments": zod.number(),
+  "verifiedAssessments": zod.number(),
+  "regionsCovered": zod.number(),
+  "provinces": zod.array(zod.string()).optional(),
+  "averageRiskScore": zod.number(),
+  "averageHazard": zod.number().optional(),
+  "averageExposure": zod.number().optional(),
+  "averageVulnerability": zod.number().optional(),
+  "averageCapacity": zod.number().optional(),
+  "byClass": zod.object({
+  "low": zod.number().optional(),
+  "moderate": zod.number().optional(),
+  "high": zod.number().optional(),
+  "extreme": zod.number().optional()
+}),
+  "byHazard": zod.array(zod.object({
+  "hazardType": zod.string().optional(),
+  "count": zod.number().optional(),
+  "averageRiskScore": zod.number().optional()
+})),
+  "exposedPopulation": zod.number(),
+  "exposedFacilities": zod.number(),
+  "exposedRoadsKm": zod.number().optional(),
+  "lastAssessedAt": zod.string().nullish(),
+  "weights": zod.object({
+  "hazard": zod.number().optional(),
+  "exposure": zod.number().optional(),
+  "vulnerability": zod.number().optional(),
+  "capacity": zod.number().optional()
+}).optional()
+})
+
+
+/**
+ * @summary High-risk area ranking
+ */
+export const getRiskRankingsQueryLimitDefault = 10;
+
+export const GetRiskRankingsQueryParams = zod.object({
+  "limit": zod.coerce.number().default(getRiskRankingsQueryLimitDefault)
+})
+
+export const GetRiskRankingsResponseItem = zod.object({
+  "rank": zod.number(),
+  "id": zod.number(),
+  "regionName": zod.string(),
+  "province": zod.string(),
+  "hazardType": zod.string(),
+  "riskScore": zod.number(),
+  "riskClass": zod.string(),
+  "exposedPopulation": zod.number().optional(),
+  "verified": zod.boolean().optional()
+})
+export const GetRiskRankingsResponse = zod.array(GetRiskRankingsResponseItem)
+
+
+/**
+ * @summary Mark an assessment as verified (audited)
+ */
+export const VerifyRiskAssessmentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const VerifyRiskAssessmentBody = zod.object({
+  "verified": zod.boolean(),
+  "note": zod.string().nullish()
+})
+
+export const VerifyRiskAssessmentResponse = zod.object({
+  "id": zod.number(),
+  "regionName": zod.string(),
+  "regionCode": zod.string().nullish(),
+  "province": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "extentKm": zod.number().optional(),
+  "hazardType": zod.string(),
+  "hazardIndex": zod.number(),
+  "exposureIndex": zod.number(),
+  "vulnerabilityIndex": zod.number(),
+  "capacityIndex": zod.number(),
+  "riskScore": zod.number(),
+  "riskClass": zod.string(),
+  "population": zod.number(),
+  "exposedPopulation": zod.number(),
+  "exposedFacilities": zod.number(),
+  "exposedRoadsKm": zod.number(),
+  "indicators": zod.object({
+  "hazard": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.number()
+})),
+  "exposure": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.number()
+})),
+  "vulnerability": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.number()
+})),
+  "capacity": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.number()
+}))
+}).optional(),
+  "sources": zod.array(zod.string()).optional(),
+  "verified": zod.boolean(),
+  "verifiedAt": zod.string().nullish(),
+  "assessedAt": zod.string()
+})
+
+
+/**
+ * @summary List saved scenarios (simulations only)
+ */
+export const GetScenariosResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "hazardType": zod.string(),
+  "assessmentId": zod.number(),
+  "regionName": zod.string(),
+  "parameters": zod.object({
+  "intensity": zod.number(),
+  "durationHours": zod.number(),
+  "rainfallMm": zod.number(),
+  "season": zod.enum(['dry', 'transition', 'wet']),
+  "timeOfDay": zod.enum(['day', 'night']),
+  "warningLeadTimeHours": zod.number()
+}),
+  "results": zod.object({
+  "affectedPopulation": zod.number(),
+  "affectedVulnerableGroups": zod.number(),
+  "displacedPopulation": zod.number(),
+  "medicalNeeds": zod.number(),
+  "affectedFacilities": zod.number(),
+  "affectedRoadsKm": zod.number(),
+  "economicLossIdrBillion": zod.number(),
+  "impactLevel": zod.enum(['limited', 'moderate', 'severe', 'critical']),
+  "sectorImpacts": zod.array(zod.object({
+  "sector": zod.string(),
+  "impact": zod.number(),
+  "note": zod.string()
+})),
+  "reliefNeeds": zod.array(zod.object({
+  "category": zod.string(),
+  "quantity": zod.number(),
+  "unit": zod.string()
+})),
+  "responsePhases": zod.array(zod.object({
+  "phase": zod.string(),
+  "window": zod.string(),
+  "focus": zod.string()
+})),
+  "modelNotes": zod.array(zod.string())
+}),
+  "status": zod.string().optional(),
+  "notes": zod.string().nullish(),
+  "isSimulation": zod.boolean().optional(),
+  "createdAt": zod.string()
+})
+export const GetScenariosResponse = zod.array(GetScenariosResponseItem)
+
+
+/**
+ * @summary Run and store a hypothetical impact simulation
+ */
+export const CreateScenarioBody = zod.object({
+  "name": zod.string(),
+  "assessmentId": zod.number(),
+  "parameters": zod.object({
+  "intensity": zod.number(),
+  "durationHours": zod.number(),
+  "rainfallMm": zod.number(),
+  "season": zod.enum(['dry', 'transition', 'wet']),
+  "timeOfDay": zod.enum(['day', 'night']),
+  "warningLeadTimeHours": zod.number()
+}),
+  "notes": zod.string().nullish()
+})
+
+export const CreateScenarioResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "hazardType": zod.string(),
+  "assessmentId": zod.number(),
+  "regionName": zod.string(),
+  "parameters": zod.object({
+  "intensity": zod.number(),
+  "durationHours": zod.number(),
+  "rainfallMm": zod.number(),
+  "season": zod.enum(['dry', 'transition', 'wet']),
+  "timeOfDay": zod.enum(['day', 'night']),
+  "warningLeadTimeHours": zod.number()
+}),
+  "results": zod.object({
+  "affectedPopulation": zod.number(),
+  "affectedVulnerableGroups": zod.number(),
+  "displacedPopulation": zod.number(),
+  "medicalNeeds": zod.number(),
+  "affectedFacilities": zod.number(),
+  "affectedRoadsKm": zod.number(),
+  "economicLossIdrBillion": zod.number(),
+  "impactLevel": zod.enum(['limited', 'moderate', 'severe', 'critical']),
+  "sectorImpacts": zod.array(zod.object({
+  "sector": zod.string(),
+  "impact": zod.number(),
+  "note": zod.string()
+})),
+  "reliefNeeds": zod.array(zod.object({
+  "category": zod.string(),
+  "quantity": zod.number(),
+  "unit": zod.string()
+})),
+  "responsePhases": zod.array(zod.object({
+  "phase": zod.string(),
+  "window": zod.string(),
+  "focus": zod.string()
+})),
+  "modelNotes": zod.array(zod.string())
+}),
+  "status": zod.string().optional(),
+  "notes": zod.string().nullish(),
+  "isSimulation": zod.boolean().optional(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Compare two to four saved scenarios
+ */
+export const CompareScenariosBody = zod.object({
+  "scenarioIds": zod.array(zod.number())
+})
+
+export const CompareScenariosResponse = zod.object({
+  "scenarios": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "hazardType": zod.string(),
+  "assessmentId": zod.number(),
+  "regionName": zod.string(),
+  "parameters": zod.object({
+  "intensity": zod.number(),
+  "durationHours": zod.number(),
+  "rainfallMm": zod.number(),
+  "season": zod.enum(['dry', 'transition', 'wet']),
+  "timeOfDay": zod.enum(['day', 'night']),
+  "warningLeadTimeHours": zod.number()
+}),
+  "results": zod.object({
+  "affectedPopulation": zod.number(),
+  "affectedVulnerableGroups": zod.number(),
+  "displacedPopulation": zod.number(),
+  "medicalNeeds": zod.number(),
+  "affectedFacilities": zod.number(),
+  "affectedRoadsKm": zod.number(),
+  "economicLossIdrBillion": zod.number(),
+  "impactLevel": zod.enum(['limited', 'moderate', 'severe', 'critical']),
+  "sectorImpacts": zod.array(zod.object({
+  "sector": zod.string(),
+  "impact": zod.number(),
+  "note": zod.string()
+})),
+  "reliefNeeds": zod.array(zod.object({
+  "category": zod.string(),
+  "quantity": zod.number(),
+  "unit": zod.string()
+})),
+  "responsePhases": zod.array(zod.object({
+  "phase": zod.string(),
+  "window": zod.string(),
+  "focus": zod.string()
+})),
+  "modelNotes": zod.array(zod.string())
+}),
+  "status": zod.string().optional(),
+  "notes": zod.string().nullish(),
+  "isSimulation": zod.boolean().optional(),
+  "createdAt": zod.string()
+})),
+  "metrics": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "unit": zod.string(),
+  "higherIsWorse": zod.boolean(),
+  "values": zod.array(zod.object({
+  "scenarioId": zod.number(),
+  "name": zod.string(),
+  "regionName": zod.string(),
+  "value": zod.number()
+}))
+}))
+})
+
+
+/**
+ * @summary Scenario detail
+ */
+export const GetScenarioParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetScenarioResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "hazardType": zod.string(),
+  "assessmentId": zod.number(),
+  "regionName": zod.string(),
+  "parameters": zod.object({
+  "intensity": zod.number(),
+  "durationHours": zod.number(),
+  "rainfallMm": zod.number(),
+  "season": zod.enum(['dry', 'transition', 'wet']),
+  "timeOfDay": zod.enum(['day', 'night']),
+  "warningLeadTimeHours": zod.number()
+}),
+  "results": zod.object({
+  "affectedPopulation": zod.number(),
+  "affectedVulnerableGroups": zod.number(),
+  "displacedPopulation": zod.number(),
+  "medicalNeeds": zod.number(),
+  "affectedFacilities": zod.number(),
+  "affectedRoadsKm": zod.number(),
+  "economicLossIdrBillion": zod.number(),
+  "impactLevel": zod.enum(['limited', 'moderate', 'severe', 'critical']),
+  "sectorImpacts": zod.array(zod.object({
+  "sector": zod.string(),
+  "impact": zod.number(),
+  "note": zod.string()
+})),
+  "reliefNeeds": zod.array(zod.object({
+  "category": zod.string(),
+  "quantity": zod.number(),
+  "unit": zod.string()
+})),
+  "responsePhases": zod.array(zod.object({
+  "phase": zod.string(),
+  "window": zod.string(),
+  "focus": zod.string()
+})),
+  "modelNotes": zod.array(zod.string())
+}),
+  "status": zod.string().optional(),
+  "notes": zod.string().nullish(),
+  "isSimulation": zod.boolean().optional(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a saved scenario
+ */
+export const DeleteScenarioParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteScenarioResponse = zod.void()
+
+
+/**
+ * @summary Download a plain-text scenario assessment report
+ */
+export const GetScenarioReportParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetScenarioReportResponse = zod.string()
+
+
+/**
+ * @summary List registered data sources with sync status
+ */
+export const GetDataSourcesResponseItem = zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "agency": zod.string(),
+  "category": zod.string(),
+  "integrationType": zod.string(),
+  "status": zod.string(),
+  "endpointUrl": zod.string().nullish(),
+  "updateFrequency": zod.string(),
+  "lastSyncAt": zod.string().nullish(),
+  "lastSyncStatus": zod.string().nullish(),
+  "recordsAvailable": zod.number(),
+  "completeness": zod.number(),
+  "duplicateRate": zod.number(),
+  "owner": zod.string().nullish(),
+  "description": zod.string().nullish(),
+  "isSimulated": zod.boolean()
+})
+export const GetDataSourcesResponse = zod.array(GetDataSourcesResponseItem)
+
+
+/**
+ * @summary Update a data source registry entry (admin only)
+ */
+export const UpdateDataSourceParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateDataSourceBody = zod.object({
+  "status": zod.string().optional(),
+  "description": zod.string().optional(),
+  "updateFrequency": zod.string().optional()
+})
+
+export const UpdateDataSourceResponse = zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "agency": zod.string(),
+  "category": zod.string(),
+  "integrationType": zod.string(),
+  "status": zod.string(),
+  "endpointUrl": zod.string().nullish(),
+  "updateFrequency": zod.string(),
+  "lastSyncAt": zod.string().nullish(),
+  "lastSyncStatus": zod.string().nullish(),
+  "recordsAvailable": zod.number(),
+  "completeness": zod.number(),
+  "duplicateRate": zod.number(),
+  "owner": zod.string().nullish(),
+  "description": zod.string().nullish(),
+  "isSimulated": zod.boolean()
+})
+
+
+/**
+ * @summary Trigger a synchronisation attempt for one source
+ */
+export const SyncDataSourceParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const SyncDataSourceResponse = zod.object({
+  "outcome": zod.enum(['synced', 'simulated', 'unavailable']),
+  "message": zod.string(),
+  "recordsProcessed": zod.number().optional(),
+  "durationMs": zod.number().optional(),
+  "source": zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "agency": zod.string(),
+  "category": zod.string(),
+  "integrationType": zod.string(),
+  "status": zod.string(),
+  "endpointUrl": zod.string().nullish(),
+  "updateFrequency": zod.string(),
+  "lastSyncAt": zod.string().nullish(),
+  "lastSyncStatus": zod.string().nullish(),
+  "recordsAvailable": zod.number(),
+  "completeness": zod.number(),
+  "duplicateRate": zod.number(),
+  "owner": zod.string().nullish(),
+  "description": zod.string().nullish(),
+  "isSimulated": zod.boolean()
+})
+})
+
+
+/**
+ * @summary Integration and error log
+ */
+export const getIntegrationLogsQueryLimitDefault = 50;
+
+export const GetIntegrationLogsQueryParams = zod.object({
+  "limit": zod.coerce.number().default(getIntegrationLogsQueryLimitDefault),
+  "level": zod.coerce.string().optional(),
+  "sourceId": zod.coerce.number().optional()
+})
+
+export const GetIntegrationLogsResponseItem = zod.object({
+  "id": zod.number(),
+  "sourceId": zod.number(),
+  "sourceName": zod.string().optional(),
+  "level": zod.string(),
+  "event": zod.string(),
+  "message": zod.string(),
+  "recordsProcessed": zod.number().optional(),
+  "invalidRecords": zod.number().optional(),
+  "durationMs": zod.number().nullish(),
+  "createdAt": zod.string()
+})
+export const GetIntegrationLogsResponse = zod.array(GetIntegrationLogsResponseItem)
+
+
+/**
+ * @summary Compute validation, completeness and duplicate checks
+ */
+export const GetDataQualityResponse = zod.object({
+  "generatedAt": zod.string(),
+  "summary": zod.object({
+  "total": zod.number().optional(),
+  "passed": zod.number().optional(),
+  "warnings": zod.number().optional(),
+  "failed": zod.number().optional()
+}),
+  "checks": zod.array(zod.object({
+  "id": zod.string(),
+  "label": zod.string(),
+  "status": zod.enum(['pass', 'warn', 'fail']),
+  "detail": zod.string(),
+  "affected": zod.number()
+})),
+  "datasets": zod.array(zod.object({
+  "sourceId": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "records": zod.number(),
+  "completeness": zod.number(),
+  "duplicateRate": zod.number(),
+  "isSimulated": zod.boolean()
+}))
+})
+
+
+/**
+ * @summary Run the validation suite and record the run in the log
+ */
+export const RunDataValidationResponse = zod.object({
+  "generatedAt": zod.string(),
+  "summary": zod.object({
+  "total": zod.number().optional(),
+  "passed": zod.number().optional(),
+  "warnings": zod.number().optional(),
+  "failed": zod.number().optional()
+}),
+  "checks": zod.array(zod.object({
+  "id": zod.string(),
+  "label": zod.string(),
+  "status": zod.enum(['pass', 'warn', 'fail']),
+  "detail": zod.string(),
+  "affected": zod.number()
+})),
+  "datasets": zod.array(zod.object({
+  "sourceId": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "records": zod.number(),
+  "completeness": zod.number(),
+  "duplicateRate": zod.number(),
+  "isSimulated": zod.boolean()
+}))
+})
+
+
+/**
+ * @summary Regional mitigation priorities derived from risk assessments
+ */
+export const GetMitigationRecommendationsResponseItem = zod.object({
+  "assessmentId": zod.number(),
+  "regionName": zod.string(),
+  "province": zod.string(),
+  "hazardType": zod.string(),
+  "riskScore": zod.number(),
+  "riskClass": zod.string(),
+  "priority": zod.enum(['immediate', 'high', 'planned', 'monitor']),
+  "rationale": zod.string(),
+  "requiresVerification": zod.boolean(),
+  "existingPlanId": zod.number().nullish(),
+  "existingPlanStatus": zod.string().nullish(),
+  "suggestedInterventions": zod.array(zod.object({
+  "title": zod.string().optional(),
+  "category": zod.string().optional(),
+  "rationale": zod.string().optional()
+}))
+})
+export const GetMitigationRecommendationsResponse = zod.array(GetMitigationRecommendationsResponseItem)
+
+
+/**
+ * @summary List all mitigation plans (internal)
+ */
+export const GetMitigationPlansQueryParams = zod.object({
+  "status": zod.coerce.string().optional()
+})
+
+export const GetMitigationPlansResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "regionName": zod.string(),
+  "province": zod.string(),
+  "hazardType": zod.string(),
+  "assessmentId": zod.number().nullish(),
+  "status": zod.string(),
+  "publicSummary": zod.string().nullish(),
+  "leadAgency": zod.string(),
+  "budgetTotal": zod.number(),
+  "timelineStart": zod.string().nullish(),
+  "timelineEnd": zod.string().nullish(),
+  "version": zod.number(),
+  "publishedAt": zod.string().nullish(),
+  "updatedAt": zod.string(),
+  "actionCount": zod.number(),
+  "completedActions": zod.number().optional(),
+  "progress": zod.number()
+})
+export const GetMitigationPlansResponse = zod.array(GetMitigationPlansResponseItem)
+
+
+/**
+ * @summary Create a draft mitigation plan
+ */
+export const CreateMitigationPlanBody = zod.object({
+  "title": zod.string(),
+  "regionName": zod.string(),
+  "province": zod.string().optional(),
+  "hazardType": zod.string(),
+  "assessmentId": zod.number().nullish(),
+  "leadAgency": zod.string(),
+  "publicSummary": zod.string().nullish(),
+  "internalNotes": zod.string().nullish(),
+  "budgetTotal": zod.number().optional(),
+  "timelineStart": zod.string().nullish(),
+  "timelineEnd": zod.string().nullish()
+})
+
+export const CreateMitigationPlanResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "regionName": zod.string(),
+  "province": zod.string(),
+  "hazardType": zod.string(),
+  "assessmentId": zod.number().nullish(),
+  "status": zod.string(),
+  "publicSummary": zod.string().nullish(),
+  "internalNotes": zod.string().nullish(),
+  "leadAgency": zod.string(),
+  "budgetTotal": zod.number(),
+  "timelineStart": zod.string().nullish(),
+  "timelineEnd": zod.string().nullish(),
+  "version": zod.number(),
+  "createdBy": zod.number().nullish(),
+  "reviewedAt": zod.string().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "publishedAt": zod.string().nullish(),
+  "updatedAt": zod.string(),
+  "riskScore": zod.number().nullish(),
+  "actions": zod.array(zod.object({
+  "id": zod.number(),
+  "planId": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.string(),
+  "responsibleAgency": zod.string(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
+  "budget": zod.number(),
+  "progress": zod.number(),
+  "status": zod.string(),
+  "priorityScore": zod.number(),
+  "criteria": zod.record(zod.string(), zod.number())
+}))
+})
+
+
+/**
+ * @summary Mitigation plan detail with actions
+ */
+export const GetMitigationPlanParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetMitigationPlanResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "regionName": zod.string(),
+  "province": zod.string(),
+  "hazardType": zod.string(),
+  "assessmentId": zod.number().nullish(),
+  "status": zod.string(),
+  "publicSummary": zod.string().nullish(),
+  "internalNotes": zod.string().nullish(),
+  "leadAgency": zod.string(),
+  "budgetTotal": zod.number(),
+  "timelineStart": zod.string().nullish(),
+  "timelineEnd": zod.string().nullish(),
+  "version": zod.number(),
+  "createdBy": zod.number().nullish(),
+  "reviewedAt": zod.string().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "publishedAt": zod.string().nullish(),
+  "updatedAt": zod.string(),
+  "riskScore": zod.number().nullish(),
+  "actions": zod.array(zod.object({
+  "id": zod.number(),
+  "planId": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.string(),
+  "responsibleAgency": zod.string(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
+  "budget": zod.number(),
+  "progress": zod.number(),
+  "status": zod.string(),
+  "priorityScore": zod.number(),
+  "criteria": zod.record(zod.string(), zod.number())
+}))
+})
+
+
+/**
+ * @summary Update plan content (draft or review only)
+ */
+export const UpdateMitigationPlanParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateMitigationPlanBody = zod.object({
+  "title": zod.string().optional(),
+  "publicSummary": zod.string().nullish(),
+  "internalNotes": zod.string().nullish(),
+  "leadAgency": zod.string().optional(),
+  "budgetTotal": zod.number().optional(),
+  "timelineStart": zod.string().nullish(),
+  "timelineEnd": zod.string().nullish()
+})
+
+export const UpdateMitigationPlanResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "regionName": zod.string(),
+  "province": zod.string(),
+  "hazardType": zod.string(),
+  "assessmentId": zod.number().nullish(),
+  "status": zod.string(),
+  "publicSummary": zod.string().nullish(),
+  "internalNotes": zod.string().nullish(),
+  "leadAgency": zod.string(),
+  "budgetTotal": zod.number(),
+  "timelineStart": zod.string().nullish(),
+  "timelineEnd": zod.string().nullish(),
+  "version": zod.number(),
+  "createdBy": zod.number().nullish(),
+  "reviewedAt": zod.string().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "publishedAt": zod.string().nullish(),
+  "updatedAt": zod.string(),
+  "riskScore": zod.number().nullish(),
+  "actions": zod.array(zod.object({
+  "id": zod.number(),
+  "planId": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.string(),
+  "responsibleAgency": zod.string(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
+  "budget": zod.number(),
+  "progress": zod.number(),
+  "status": zod.string(),
+  "priorityScore": zod.number(),
+  "criteria": zod.record(zod.string(), zod.number())
+}))
+})
+
+
+/**
+ * @summary Advance the publication workflow
+ */
+export const TransitionMitigationPlanParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const TransitionMitigationPlanBody = zod.object({
+  "action": zod.enum(['submit_review', 'approve', 'publish', 'return_draft', 'archive']),
+  "note": zod.string().nullish()
+})
+
+export const TransitionMitigationPlanResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "regionName": zod.string(),
+  "province": zod.string(),
+  "hazardType": zod.string(),
+  "assessmentId": zod.number().nullish(),
+  "status": zod.string(),
+  "publicSummary": zod.string().nullish(),
+  "internalNotes": zod.string().nullish(),
+  "leadAgency": zod.string(),
+  "budgetTotal": zod.number(),
+  "timelineStart": zod.string().nullish(),
+  "timelineEnd": zod.string().nullish(),
+  "version": zod.number(),
+  "createdBy": zod.number().nullish(),
+  "reviewedAt": zod.string().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "publishedAt": zod.string().nullish(),
+  "updatedAt": zod.string(),
+  "riskScore": zod.number().nullish(),
+  "actions": zod.array(zod.object({
+  "id": zod.number(),
+  "planId": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.string(),
+  "responsibleAgency": zod.string(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
+  "budget": zod.number(),
+  "progress": zod.number(),
+  "status": zod.string(),
+  "priorityScore": zod.number(),
+  "criteria": zod.record(zod.string(), zod.number())
+}))
+})
+
+
+/**
+ * @summary Evacuation facilities with internal occupancy data
+ */
+export const GetMitigationFacilitiesQueryParams = zod.object({
+  "type": zod.coerce.string().optional()
+})
+
+export const GetMitigationFacilitiesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "regionName": zod.string(),
+  "province": zod.string(),
+  "address": zod.string().nullish(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "capacity": zod.number(),
+  "occupancy": zod.number(),
+  "amenities": zod.array(zod.string()).optional(),
+  "status": zod.string(),
+  "isPublic": zod.boolean(),
+  "contact": zod.string().nullish(),
+  "operatingAgency": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "verifiedAt": zod.string().nullish()
+})
+export const GetMitigationFacilitiesResponse = zod.array(GetMitigationFacilitiesResponseItem)
+
+
+/**
+ * @summary Update facility status, occupancy or internal notes
+ */
+export const UpdateFacilityParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateFacilityBody = zod.object({
+  "status": zod.string().optional(),
+  "occupancy": zod.number().optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateFacilityResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "regionName": zod.string(),
+  "province": zod.string(),
+  "address": zod.string().nullish(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "capacity": zod.number(),
+  "occupancy": zod.number(),
+  "amenities": zod.array(zod.string()).optional(),
+  "status": zod.string(),
+  "isPublic": zod.boolean(),
+  "contact": zod.string().nullish(),
+  "operatingAgency": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "verifiedAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary Resource availability inventory (internal)
+ */
+export const GetResourcesQueryParams = zod.object({
+  "region": zod.coerce.string().optional(),
+  "category": zod.coerce.string().optional()
+})
+
+export const GetResourcesResponseItem = zod.object({
+  "id": zod.number(),
+  "itemName": zod.string(),
+  "category": zod.string(),
+  "quantity": zod.number(),
+  "unit": zod.string(),
+  "regionName": zod.string(),
+  "facilityId": zod.number().nullish(),
+  "facilityName": zod.string().nullish(),
+  "condition": zod.string(),
+  "allocationStatus": zod.string(),
+  "notes": zod.string().nullish(),
+  "lastUpdated": zod.string()
+})
+export const GetResourcesResponse = zod.array(GetResourcesResponseItem)
+
+
+/**
+ * @summary Update stock, condition or allocation status
+ */
+export const UpdateResourceParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateResourceBody = zod.object({
+  "quantity": zod.number().optional(),
+  "condition": zod.string().optional(),
+  "allocationStatus": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateResourceResponse = zod.object({
+  "id": zod.number(),
+  "itemName": zod.string(),
+  "category": zod.string(),
+  "quantity": zod.number(),
+  "unit": zod.string(),
+  "regionName": zod.string(),
+  "facilityId": zod.number().nullish(),
+  "facilityName": zod.string().nullish(),
+  "condition": zod.string(),
+  "allocationStatus": zod.string(),
+  "notes": zod.string().nullish(),
+  "lastUpdated": zod.string()
+})
+
+
+/**
+ * @summary Public portal headline figures
+ */
+export const GetPublicOverviewResponse = zod.object({
+  "publishedPlans": zod.number(),
+  "regionsCovered": zod.number(),
+  "shelters": zod.number(),
+  "totalShelterCapacity": zod.number(),
+  "guidelines": zod.number(),
+  "lastPublishedAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary Published mitigation plans (public-safe fields only)
+ */
+export const GetPublicMitigationPlansResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "regionName": zod.string(),
+  "province": zod.string(),
+  "hazardType": zod.string(),
+  "publicSummary": zod.string().nullish(),
+  "leadAgency": zod.string(),
+  "budgetTotal": zod.number().optional(),
+  "timelineStart": zod.string().nullish(),
+  "timelineEnd": zod.string().nullish(),
+  "publishedAt": zod.string().nullable(),
+  "version": zod.number(),
+  "actionCount": zod.number().optional(),
+  "progress": zod.number().optional()
+})
+export const GetPublicMitigationPlansResponse = zod.array(GetPublicMitigationPlansResponseItem)
+
+
+/**
+ * @summary Published plan detail
+ */
+export const GetPublicMitigationPlanParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetPublicMitigationPlanResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "regionName": zod.string(),
+  "province": zod.string(),
+  "hazardType": zod.string(),
+  "publicSummary": zod.string().nullish(),
+  "leadAgency": zod.string(),
+  "budgetTotal": zod.number().optional(),
+  "timelineStart": zod.string().nullish(),
+  "timelineEnd": zod.string().nullish(),
+  "publishedAt": zod.string().nullish(),
+  "version": zod.number().optional(),
+  "progress": zod.number().optional(),
+  "actions": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.string(),
+  "responsibleAgency": zod.string(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
+  "progress": zod.number(),
+  "status": zod.string()
+}))
+})
+
+
+/**
+ * @summary Officially designated public evacuation facilities
+ */
+export const GetPublicEvacuationFacilitiesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "regionName": zod.string(),
+  "province": zod.string().optional(),
+  "address": zod.string().nullish(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "capacity": zod.number().optional(),
+  "amenities": zod.array(zod.string()).optional(),
+  "status": zod.string(),
+  "contact": zod.string().nullish(),
+  "operatingAgency": zod.string().nullish(),
+  "verifiedAt": zod.string().nullish()
+})
+export const GetPublicEvacuationFacilitiesResponse = zod.array(GetPublicEvacuationFacilitiesResponseItem)
+
+
+/**
+ * @summary Public emergency preparedness guidelines
+ */
+export const GetPublicGuidelinesResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "category": zod.string(),
+  "audience": zod.string().optional(),
+  "summary": zod.string(),
+  "steps": zod.array(zod.string()).optional(),
+  "source": zod.string(),
+  "sourceUrl": zod.string().nullish(),
+  "updatedAt": zod.string()
+})
+export const GetPublicGuidelinesResponse = zod.array(GetPublicGuidelinesResponseItem)
+
+
+/**
+ * @summary List officially verified and published evacuation routes
+ */
+export const GetPublicEvacuationRoutesQueryParams = zod.object({
+  "regionName": zod.coerce.string().optional(),
+  "hazardType": zod.coerce.string().optional(),
+  "destinationType": zod.coerce.string().optional()
+})
+
+export const GetPublicEvacuationRoutesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "routeCode": zod.string(),
+  "originName": zod.string(),
+  "originLatitude": zod.number(),
+  "originLongitude": zod.number(),
+  "destinationName": zod.string(),
+  "destinationLatitude": zod.number(),
+  "destinationLongitude": zod.number(),
+  "regionName": zod.string(),
+  "province": zod.string(),
+  "hazardType": zod.string(),
+  "routeType": zod.string(),
+  "distanceKm": zod.number(),
+  "estimatedTimeMinutes": zod.number(),
+  "roadSurface": zod.string().nullish(),
+  "isAccessible": zod.boolean(),
+  "hazardExposure": zod.string(),
+  "routeStatus": zod.string(),
+  "routeGeometry": zod.array(zod.array(zod.number())),
+  "publicDescription": zod.string().nullish(),
+  "publishedAt": zod.string().nullish(),
+  "version": zod.number()
+})
+export const GetPublicEvacuationRoutesResponse = zod.array(GetPublicEvacuationRoutesResponseItem)
+
+
+/**
+ * @summary Detail of published evacuation route with segments and shelter
+ */
+export const GetPublicEvacuationRouteParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetPublicEvacuationRouteResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "routeCode": zod.string(),
+  "originName": zod.string(),
+  "originLatitude": zod.number(),
+  "originLongitude": zod.number(),
+  "destinationName": zod.string(),
+  "destinationLatitude": zod.number(),
+  "destinationLongitude": zod.number(),
+  "regionName": zod.string(),
+  "province": zod.string(),
+  "hazardType": zod.string(),
+  "routeType": zod.string(),
+  "distanceKm": zod.number(),
+  "estimatedTimeMinutes": zod.number(),
+  "roadSurface": zod.string().nullish(),
+  "isAccessible": zod.boolean(),
+  "hazardExposure": zod.string(),
+  "routeStatus": zod.string(),
+  "routeGeometry": zod.array(zod.array(zod.number())),
+  "publicDescription": zod.string().nullish(),
+  "publishedAt": zod.string().nullish(),
+  "version": zod.number()
+}).and(zod.object({
+  "segments": zod.array(zod.object({
+  "id": zod.number(),
+  "segmentOrder": zod.number(),
+  "name": zod.string(),
+  "startLatitude": zod.number(),
+  "startLongitude": zod.number(),
+  "endLatitude": zod.number(),
+  "endLongitude": zod.number(),
+  "distanceKm": zod.number(),
+  "roadCondition": zod.string(),
+  "isBlocked": zod.boolean()
+})).optional(),
+  "destinationFacility": zod.object({
+  "id": zod.number().optional(),
+  "name": zod.string().optional(),
+  "type": zod.string().optional(),
+  "capacity": zod.number().optional(),
+  "address": zod.string().nullish()
+}).nullish()
+}))
+
+
+/**
+ * @summary List evacuation routes across all lifecycle statuses
+ */
+export const GetEvacuationRoutesQueryParams = zod.object({
+  "regionName": zod.coerce.string().optional(),
+  "hazardType": zod.coerce.string().optional(),
+  "routeStatus": zod.coerce.string().optional()
+})
+
+export const GetEvacuationRoutesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "routeCode": zod.string(),
+  "originName": zod.string(),
+  "originLatitude": zod.number(),
+  "originLongitude": zod.number(),
+  "destinationName": zod.string(),
+  "destinationLatitude": zod.number(),
+  "destinationLongitude": zod.number(),
+  "destinationFacilityId": zod.number().nullish(),
+  "regionName": zod.string(),
+  "province": zod.string(),
+  "hazardType": zod.string(),
+  "routeType": zod.string(),
+  "distanceKm": zod.number(),
+  "estimatedTimeMinutes": zod.number(),
+  "maxCapacityPersons": zod.number(),
+  "elevationGainM": zod.number().nullish(),
+  "roadSurface": zod.string().nullish(),
+  "isAccessible": zod.boolean(),
+  "hazardExposure": zod.string(),
+  "routeStatus": zod.string(),
+  "routeGeometry": zod.array(zod.array(zod.number())),
+  "evaluationNotes": zod.string().nullish(),
+  "publicDescription": zod.string().nullish(),
+  "createdBy": zod.number().nullish(),
+  "reviewedBy": zod.number().nullish(),
+  "reviewedAt": zod.string().nullish(),
+  "approvedBy": zod.number().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "publishedAt": zod.string().nullish(),
+  "version": zod.number(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const GetEvacuationRoutesResponse = zod.array(GetEvacuationRoutesResponseItem)
+
+
+/**
+ * @summary Create candidate evacuation route
+ */
+export const CreateEvacuationRouteBody = zod.object({
+  "name": zod.string(),
+  "routeCode": zod.string(),
+  "originName": zod.string(),
+  "originLatitude": zod.number(),
+  "originLongitude": zod.number(),
+  "destinationName": zod.string(),
+  "destinationLatitude": zod.number(),
+  "destinationLongitude": zod.number(),
+  "destinationFacilityId": zod.number().nullish(),
+  "regionName": zod.string(),
+  "province": zod.string().optional(),
+  "hazardType": zod.string(),
+  "routeType": zod.string().optional(),
+  "distanceKm": zod.number().optional(),
+  "estimatedTimeMinutes": zod.number().optional(),
+  "maxCapacityPersons": zod.number().optional(),
+  "elevationGainM": zod.number().optional(),
+  "roadSurface": zod.string().nullish(),
+  "isAccessible": zod.boolean().optional(),
+  "hazardExposure": zod.string().optional(),
+  "routeGeometry": zod.array(zod.array(zod.number())).optional(),
+  "evaluationNotes": zod.string().nullish(),
+  "publicDescription": zod.string().nullish()
+})
+
+export const CreateEvacuationRouteResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "routeCode": zod.string(),
+  "originName": zod.string(),
+  "originLatitude": zod.number(),
+  "originLongitude": zod.number(),
+  "destinationName": zod.string(),
+  "destinationLatitude": zod.number(),
+  "destinationLongitude": zod.number(),
+  "destinationFacilityId": zod.number().nullish(),
+  "regionName": zod.string(),
+  "province": zod.string(),
+  "hazardType": zod.string(),
+  "routeType": zod.string(),
+  "distanceKm": zod.number(),
+  "estimatedTimeMinutes": zod.number(),
+  "maxCapacityPersons": zod.number(),
+  "elevationGainM": zod.number().nullish(),
+  "roadSurface": zod.string().nullish(),
+  "isAccessible": zod.boolean(),
+  "hazardExposure": zod.string(),
+  "routeStatus": zod.string(),
+  "routeGeometry": zod.array(zod.array(zod.number())),
+  "evaluationNotes": zod.string().nullish(),
+  "publicDescription": zod.string().nullish(),
+  "createdBy": zod.number().nullish(),
+  "reviewedBy": zod.number().nullish(),
+  "reviewedAt": zod.string().nullish(),
+  "approvedBy": zod.number().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "publishedAt": zod.string().nullish(),
+  "version": zod.number(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Full route detail with segments, verifications, and scenarios
+ */
+export const GetEvacuationRouteParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetEvacuationRouteResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "routeCode": zod.string(),
+  "originName": zod.string(),
+  "originLatitude": zod.number(),
+  "originLongitude": zod.number(),
+  "destinationName": zod.string(),
+  "destinationLatitude": zod.number(),
+  "destinationLongitude": zod.number(),
+  "destinationFacilityId": zod.number().nullish(),
+  "regionName": zod.string(),
+  "province": zod.string(),
+  "hazardType": zod.string(),
+  "routeType": zod.string(),
+  "distanceKm": zod.number(),
+  "estimatedTimeMinutes": zod.number(),
+  "maxCapacityPersons": zod.number(),
+  "elevationGainM": zod.number().nullish(),
+  "roadSurface": zod.string().nullish(),
+  "isAccessible": zod.boolean(),
+  "hazardExposure": zod.string(),
+  "routeStatus": zod.string(),
+  "routeGeometry": zod.array(zod.array(zod.number())),
+  "evaluationNotes": zod.string().nullish(),
+  "publicDescription": zod.string().nullish(),
+  "createdBy": zod.number().nullish(),
+  "reviewedBy": zod.number().nullish(),
+  "reviewedAt": zod.string().nullish(),
+  "approvedBy": zod.number().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "publishedAt": zod.string().nullish(),
+  "version": zod.number(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}).and(zod.object({
+  "segments": zod.array(zod.object({
+  "id": zod.number(),
+  "routeId": zod.number(),
+  "segmentOrder": zod.number(),
+  "name": zod.string(),
+  "startLatitude": zod.number(),
+  "startLongitude": zod.number(),
+  "endLatitude": zod.number(),
+  "endLongitude": zod.number(),
+  "distanceKm": zod.number(),
+  "roadCondition": zod.string(),
+  "roadWidth": zod.string().nullish(),
+  "hazardNotes": zod.string().nullish(),
+  "isBlocked": zod.boolean(),
+  "blockageReason": zod.string().nullish(),
+  "lastInspectedAt": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})).optional(),
+  "verifications": zod.array(zod.object({
+  "id": zod.number(),
+  "routeId": zod.number(),
+  "inspectorId": zod.number(),
+  "inspectorName": zod.string(),
+  "inspectionDate": zod.string(),
+  "overallCondition": zod.string(),
+  "roadAccessible": zod.boolean(),
+  "signageAdequate": zod.boolean(),
+  "shelterReady": zod.boolean(),
+  "lightingAvailable": zod.boolean(),
+  "drainageAdequate": zod.boolean(),
+  "findings": zod.string(),
+  "recommendations": zod.string().nullish(),
+  "geotagPhotos": zod.array(zod.object({
+  "url": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "caption": zod.string()
+})),
+  "gpsTrack": zod.array(zod.array(zod.number())).optional(),
+  "createdAt": zod.string()
+})).optional(),
+  "scenarios": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "hazardType": zod.string(),
+  "regionName": zod.string(),
+  "parameters": zod.object({
+  "rainfallIntensityMm": zod.number().optional(),
+  "groundSaturationPercent": zod.number().optional(),
+  "earthquakeMagnitude": zod.number().optional(),
+  "tsunamiWaveHeightM": zod.number().optional(),
+  "estimatedArrivalTimeMin": zod.number().optional(),
+  "targetPopulation": zod.number().optional(),
+  "blockedRoadProbability": zod.number().optional(),
+  "evacuationMode": zod.string().optional()
+}),
+  "candidateRoutes": zod.array(zod.object({
+  "routeId": zod.number().optional(),
+  "name": zod.string(),
+  "score": zod.number(),
+  "travelTime": zod.number(),
+  "hazardExposure": zod.string(),
+  "notes": zod.string()
+})),
+  "recommendation": zod.string().nullish(),
+  "status": zod.string(),
+  "createdBy": zod.number().nullish(),
+  "createdAt": zod.string()
+})).optional(),
+  "destinationFacility": zod.object({
+  "id": zod.number().optional(),
+  "name": zod.string().optional(),
+  "type": zod.string().optional(),
+  "regionName": zod.string().optional(),
+  "province": zod.string().optional(),
+  "address": zod.string().nullish(),
+  "latitude": zod.number().optional(),
+  "longitude": zod.number().optional(),
+  "capacity": zod.number().optional(),
+  "occupancy": zod.number().optional(),
+  "status": zod.string().optional(),
+  "isPublic": zod.boolean().optional(),
+  "contact": zod.string().nullish(),
+  "operatingAgency": zod.string().nullish()
+}).nullish()
+}))
+
+
+/**
+ * @summary Update route in draft or analysis status
+ */
+export const UpdateEvacuationRouteParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateEvacuationRouteBody = zod.object({
+  "name": zod.string().optional(),
+  "routeCode": zod.string().optional(),
+  "originName": zod.string().optional(),
+  "originLatitude": zod.number().optional(),
+  "originLongitude": zod.number().optional(),
+  "destinationName": zod.string().optional(),
+  "destinationLatitude": zod.number().optional(),
+  "destinationLongitude": zod.number().optional(),
+  "destinationFacilityId": zod.number().nullish(),
+  "regionName": zod.string().optional(),
+  "province": zod.string().optional(),
+  "hazardType": zod.string().optional(),
+  "routeType": zod.string().optional(),
+  "distanceKm": zod.number().optional(),
+  "estimatedTimeMinutes": zod.number().optional(),
+  "maxCapacityPersons": zod.number().optional(),
+  "elevationGainM": zod.number().optional(),
+  "roadSurface": zod.string().nullish(),
+  "isAccessible": zod.boolean().optional(),
+  "hazardExposure": zod.string().optional(),
+  "routeGeometry": zod.array(zod.array(zod.number())).optional(),
+  "evaluationNotes": zod.string().nullish(),
+  "publicDescription": zod.string().nullish()
+})
+
+export const UpdateEvacuationRouteResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "routeCode": zod.string(),
+  "originName": zod.string(),
+  "originLatitude": zod.number(),
+  "originLongitude": zod.number(),
+  "destinationName": zod.string(),
+  "destinationLatitude": zod.number(),
+  "destinationLongitude": zod.number(),
+  "destinationFacilityId": zod.number().nullish(),
+  "regionName": zod.string(),
+  "province": zod.string(),
+  "hazardType": zod.string(),
+  "routeType": zod.string(),
+  "distanceKm": zod.number(),
+  "estimatedTimeMinutes": zod.number(),
+  "maxCapacityPersons": zod.number(),
+  "elevationGainM": zod.number().nullish(),
+  "roadSurface": zod.string().nullish(),
+  "isAccessible": zod.boolean(),
+  "hazardExposure": zod.string(),
+  "routeStatus": zod.string(),
+  "routeGeometry": zod.array(zod.array(zod.number())),
+  "evaluationNotes": zod.string().nullish(),
+  "publicDescription": zod.string().nullish(),
+  "createdBy": zod.number().nullish(),
+  "reviewedBy": zod.number().nullish(),
+  "reviewedAt": zod.string().nullish(),
+  "approvedBy": zod.number().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "publishedAt": zod.string().nullish(),
+  "version": zod.number(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Delete draft evacuation route (Admin only)
+ */
+export const DeleteEvacuationRouteParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteEvacuationRouteResponse = zod.void()
+
+
+/**
+ * @summary Advance or return route lifecycle workflow status
+ */
+export const TransitionEvacuationRouteParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const TransitionEvacuationRouteBody = zod.object({
+  "action": zod.enum(['submit_analysis', 'submit_verification', 'submit_review', 'approve', 'publish', 'return_draft', 'archive'])
+})
+
+export const TransitionEvacuationRouteResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "routeCode": zod.string(),
+  "originName": zod.string(),
+  "originLatitude": zod.number(),
+  "originLongitude": zod.number(),
+  "destinationName": zod.string(),
+  "destinationLatitude": zod.number(),
+  "destinationLongitude": zod.number(),
+  "destinationFacilityId": zod.number().nullish(),
+  "regionName": zod.string(),
+  "province": zod.string(),
+  "hazardType": zod.string(),
+  "routeType": zod.string(),
+  "distanceKm": zod.number(),
+  "estimatedTimeMinutes": zod.number(),
+  "maxCapacityPersons": zod.number(),
+  "elevationGainM": zod.number().nullish(),
+  "roadSurface": zod.string().nullish(),
+  "isAccessible": zod.boolean(),
+  "hazardExposure": zod.string(),
+  "routeStatus": zod.string(),
+  "routeGeometry": zod.array(zod.array(zod.number())),
+  "evaluationNotes": zod.string().nullish(),
+  "publicDescription": zod.string().nullish(),
+  "createdBy": zod.number().nullish(),
+  "reviewedBy": zod.number().nullish(),
+  "reviewedAt": zod.string().nullish(),
+  "approvedBy": zod.number().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "publishedAt": zod.string().nullish(),
+  "version": zod.number(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary List road segments for an evacuation route
+ */
+export const GetRouteSegmentsParams = zod.object({
+  "routeId": zod.coerce.number()
+})
+
+export const GetRouteSegmentsResponseItem = zod.object({
+  "id": zod.number(),
+  "routeId": zod.number(),
+  "segmentOrder": zod.number(),
+  "name": zod.string(),
+  "startLatitude": zod.number(),
+  "startLongitude": zod.number(),
+  "endLatitude": zod.number(),
+  "endLongitude": zod.number(),
+  "distanceKm": zod.number(),
+  "roadCondition": zod.string(),
+  "roadWidth": zod.string().nullish(),
+  "hazardNotes": zod.string().nullish(),
+  "isBlocked": zod.boolean(),
+  "blockageReason": zod.string().nullish(),
+  "lastInspectedAt": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const GetRouteSegmentsResponse = zod.array(GetRouteSegmentsResponseItem)
+
+
+/**
+ * @summary Add road segment to evacuation route
+ */
+export const CreateRouteSegmentParams = zod.object({
+  "routeId": zod.coerce.number()
+})
+
+export const CreateRouteSegmentBody = zod.object({
+  "segmentOrder": zod.number().optional(),
+  "name": zod.string(),
+  "startLatitude": zod.number(),
+  "startLongitude": zod.number(),
+  "endLatitude": zod.number(),
+  "endLongitude": zod.number(),
+  "distanceKm": zod.number().optional(),
+  "roadCondition": zod.string().optional(),
+  "roadWidth": zod.string().nullish(),
+  "hazardNotes": zod.string().nullish(),
+  "isBlocked": zod.boolean().optional(),
+  "blockageReason": zod.string().nullish(),
+  "lastInspectedAt": zod.string().nullish()
+})
+
+export const CreateRouteSegmentResponse = zod.object({
+  "id": zod.number(),
+  "routeId": zod.number(),
+  "segmentOrder": zod.number(),
+  "name": zod.string(),
+  "startLatitude": zod.number(),
+  "startLongitude": zod.number(),
+  "endLatitude": zod.number(),
+  "endLongitude": zod.number(),
+  "distanceKm": zod.number(),
+  "roadCondition": zod.string(),
+  "roadWidth": zod.string().nullish(),
+  "hazardNotes": zod.string().nullish(),
+  "isBlocked": zod.boolean(),
+  "blockageReason": zod.string().nullish(),
+  "lastInspectedAt": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Update road segment condition, blockage, or notes
+ */
+export const UpdateRouteSegmentParams = zod.object({
+  "routeId": zod.coerce.number(),
+  "id": zod.coerce.number()
+})
+
+export const UpdateRouteSegmentBody = zod.object({
+  "segmentOrder": zod.number().optional(),
+  "name": zod.string().optional(),
+  "startLatitude": zod.number().optional(),
+  "startLongitude": zod.number().optional(),
+  "endLatitude": zod.number().optional(),
+  "endLongitude": zod.number().optional(),
+  "distanceKm": zod.number().optional(),
+  "roadCondition": zod.string().optional(),
+  "roadWidth": zod.string().nullish(),
+  "hazardNotes": zod.string().nullish(),
+  "isBlocked": zod.boolean().optional(),
+  "blockageReason": zod.string().nullish(),
+  "lastInspectedAt": zod.string().nullish()
+})
+
+export const UpdateRouteSegmentResponse = zod.object({
+  "id": zod.number(),
+  "routeId": zod.number(),
+  "segmentOrder": zod.number(),
+  "name": zod.string(),
+  "startLatitude": zod.number(),
+  "startLongitude": zod.number(),
+  "endLatitude": zod.number(),
+  "endLongitude": zod.number(),
+  "distanceKm": zod.number(),
+  "roadCondition": zod.string(),
+  "roadWidth": zod.string().nullish(),
+  "hazardNotes": zod.string().nullish(),
+  "isBlocked": zod.boolean(),
+  "blockageReason": zod.string().nullish(),
+  "lastInspectedAt": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Remove road segment
+ */
+export const DeleteRouteSegmentParams = zod.object({
+  "routeId": zod.coerce.number(),
+  "id": zod.coerce.number()
+})
+
+export const DeleteRouteSegmentResponse = zod.void()
+
+
+/**
+ * @summary List field verification inspection reports for a route
+ */
+export const GetRouteVerificationsParams = zod.object({
+  "routeId": zod.coerce.number()
+})
+
+export const GetRouteVerificationsResponseItem = zod.object({
+  "id": zod.number(),
+  "routeId": zod.number(),
+  "inspectorId": zod.number(),
+  "inspectorName": zod.string(),
+  "inspectionDate": zod.string(),
+  "overallCondition": zod.string(),
+  "roadAccessible": zod.boolean(),
+  "signageAdequate": zod.boolean(),
+  "shelterReady": zod.boolean(),
+  "lightingAvailable": zod.boolean(),
+  "drainageAdequate": zod.boolean(),
+  "findings": zod.string(),
+  "recommendations": zod.string().nullish(),
+  "geotagPhotos": zod.array(zod.object({
+  "url": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "caption": zod.string()
+})),
+  "gpsTrack": zod.array(zod.array(zod.number())).optional(),
+  "createdAt": zod.string()
+})
+export const GetRouteVerificationsResponse = zod.array(GetRouteVerificationsResponseItem)
+
+
+/**
+ * @summary Record field inspection result with geotagged data
+ */
+export const CreateRouteVerificationParams = zod.object({
+  "routeId": zod.coerce.number()
+})
+
+export const CreateRouteVerificationBody = zod.object({
+  "inspectorName": zod.string().optional(),
+  "inspectionDate": zod.string().optional(),
+  "overallCondition": zod.string(),
+  "roadAccessible": zod.boolean().optional(),
+  "signageAdequate": zod.boolean().optional(),
+  "shelterReady": zod.boolean().optional(),
+  "lightingAvailable": zod.boolean().optional(),
+  "drainageAdequate": zod.boolean().optional(),
+  "findings": zod.string(),
+  "recommendations": zod.string().nullish(),
+  "geotagPhotos": zod.array(zod.object({
+  "url": zod.string().optional(),
+  "latitude": zod.number().optional(),
+  "longitude": zod.number().optional(),
+  "caption": zod.string().optional()
+})).optional(),
+  "gpsTrack": zod.array(zod.array(zod.number())).optional()
+})
+
+export const CreateRouteVerificationResponse = zod.object({
+  "id": zod.number(),
+  "routeId": zod.number(),
+  "inspectorId": zod.number(),
+  "inspectorName": zod.string(),
+  "inspectionDate": zod.string(),
+  "overallCondition": zod.string(),
+  "roadAccessible": zod.boolean(),
+  "signageAdequate": zod.boolean(),
+  "shelterReady": zod.boolean(),
+  "lightingAvailable": zod.boolean(),
+  "drainageAdequate": zod.boolean(),
+  "findings": zod.string(),
+  "recommendations": zod.string().nullish(),
+  "geotagPhotos": zod.array(zod.object({
+  "url": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "caption": zod.string()
+})),
+  "gpsTrack": zod.array(zod.array(zod.number())).optional(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary List evacuation planning simulation scenarios
+ */
+export const GetEvacuationScenariosQueryParams = zod.object({
+  "regionName": zod.coerce.string().optional(),
+  "hazardType": zod.coerce.string().optional()
+})
+
+export const GetEvacuationScenariosResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "hazardType": zod.string(),
+  "regionName": zod.string(),
+  "parameters": zod.object({
+  "rainfallIntensityMm": zod.number().optional(),
+  "groundSaturationPercent": zod.number().optional(),
+  "earthquakeMagnitude": zod.number().optional(),
+  "tsunamiWaveHeightM": zod.number().optional(),
+  "estimatedArrivalTimeMin": zod.number().optional(),
+  "targetPopulation": zod.number().optional(),
+  "blockedRoadProbability": zod.number().optional(),
+  "evacuationMode": zod.string().optional()
+}),
+  "candidateRoutes": zod.array(zod.object({
+  "routeId": zod.number().optional(),
+  "name": zod.string(),
+  "score": zod.number(),
+  "travelTime": zod.number(),
+  "hazardExposure": zod.string(),
+  "notes": zod.string()
+})),
+  "recommendation": zod.string().nullish(),
+  "status": zod.string(),
+  "createdBy": zod.number().nullish(),
+  "createdAt": zod.string()
+})
+export const GetEvacuationScenariosResponse = zod.array(GetEvacuationScenariosResponseItem)
+
+
+/**
+ * @summary Create hypothetical disaster scenario with candidate routes
+ */
+export const CreateEvacuationScenarioBody = zod.object({
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "hazardType": zod.string(),
+  "regionName": zod.string(),
+  "parameters": zod.object({
+  "rainfallIntensityMm": zod.number().optional(),
+  "groundSaturationPercent": zod.number().optional(),
+  "earthquakeMagnitude": zod.number().optional(),
+  "tsunamiWaveHeightM": zod.number().optional(),
+  "estimatedArrivalTimeMin": zod.number().optional(),
+  "targetPopulation": zod.number().optional(),
+  "blockedRoadProbability": zod.number().optional(),
+  "evacuationMode": zod.string().optional()
+}).optional(),
+  "candidateRoutes": zod.array(zod.object({
+  "routeId": zod.number().optional(),
+  "name": zod.string().optional(),
+  "score": zod.number().optional(),
+  "travelTime": zod.number().optional(),
+  "hazardExposure": zod.string().optional(),
+  "notes": zod.string().optional()
+})).optional(),
+  "recommendation": zod.string().nullish(),
+  "status": zod.string().optional()
+})
+
+export const CreateEvacuationScenarioResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "hazardType": zod.string(),
+  "regionName": zod.string(),
+  "parameters": zod.object({
+  "rainfallIntensityMm": zod.number().optional(),
+  "groundSaturationPercent": zod.number().optional(),
+  "earthquakeMagnitude": zod.number().optional(),
+  "tsunamiWaveHeightM": zod.number().optional(),
+  "estimatedArrivalTimeMin": zod.number().optional(),
+  "targetPopulation": zod.number().optional(),
+  "blockedRoadProbability": zod.number().optional(),
+  "evacuationMode": zod.string().optional()
+}),
+  "candidateRoutes": zod.array(zod.object({
+  "routeId": zod.number().optional(),
+  "name": zod.string(),
+  "score": zod.number(),
+  "travelTime": zod.number(),
+  "hazardExposure": zod.string(),
+  "notes": zod.string()
+})),
+  "recommendation": zod.string().nullish(),
+  "status": zod.string(),
+  "createdBy": zod.number().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary View scenario details and candidate route evaluations
+ */
+export const GetEvacuationScenarioParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetEvacuationScenarioResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "hazardType": zod.string(),
+  "regionName": zod.string(),
+  "parameters": zod.object({
+  "rainfallIntensityMm": zod.number().optional(),
+  "groundSaturationPercent": zod.number().optional(),
+  "earthquakeMagnitude": zod.number().optional(),
+  "tsunamiWaveHeightM": zod.number().optional(),
+  "estimatedArrivalTimeMin": zod.number().optional(),
+  "targetPopulation": zod.number().optional(),
+  "blockedRoadProbability": zod.number().optional(),
+  "evacuationMode": zod.string().optional()
+}),
+  "candidateRoutes": zod.array(zod.object({
+  "routeId": zod.number().optional(),
+  "name": zod.string(),
+  "score": zod.number(),
+  "travelTime": zod.number(),
+  "hazardExposure": zod.string(),
+  "notes": zod.string()
+})),
+  "recommendation": zod.string().nullish(),
+  "status": zod.string(),
+  "createdBy": zod.number().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete scenario simulation
+ */
+export const DeleteEvacuationScenarioParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteEvacuationScenarioResponse = zod.void()
+
+

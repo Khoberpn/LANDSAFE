@@ -52,6 +52,17 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, 'dist/public'),
     emptyOutDir: true,
+    chunkSizeWarningLimit: 800,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'wouter', '@tanstack/react-query'],
+          'vendor-leaflet': ['leaflet', 'react-leaflet'],
+          'vendor-charts': ['recharts'],
+          'vendor-three': ['three', '@react-three/fiber', '@react-three/drei'],
+        },
+      },
+    },
   },
   server: {
     port,

@@ -5,6 +5,9 @@
   "scripts": {
     "dev": "pnpm --filter @workspace/api-server --filter @workspace/landsafe --parallel run dev",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
+    "build:cf": "pnpm run build",
+    "preview:cf": "wrangler dev",
+    "deploy:cf": "wrangler deploy",
     "seed": "pnpm --filter @workspace/scripts run seed",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",

@@ -31,7 +31,8 @@ function formatAlert(a: typeof alertSelect extends Record<string, any> ? any : n
   };
 }
 
-router.get("/alerts", authenticate, requireRole("operator", "admin"), async (req, res): Promise<void> => {
+// Public read: alert feed is visible to anonymous visitors (read-only).
+router.get("/alerts", async (req, res): Promise<void> => {
   const qp = GetAlertsQueryParams.safeParse(req.query);
   const limit = parseBoundedLimit(req.query.limit, 50, 100);
   if (!qp.success || limit === null || (req.query.locationId !== undefined && parsePositiveInt(req.query.locationId) === null)) {
@@ -54,7 +55,8 @@ router.get("/alerts", authenticate, requireRole("operator", "admin"), async (req
   res.json(rows.map(formatAlert));
 });
 
-router.get("/alerts/:id", authenticate, requireRole("operator", "admin"), async (req, res): Promise<void> => {
+// Public read: single alert detail (read-only).
+router.get("/alerts/:id", async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const parsed = GetAlertParams.safeParse({ id: parsePositiveInt(raw) ?? NaN });
   if (!parsed.success) { res.status(400).json({ error: "Invalid ID" }); return; }

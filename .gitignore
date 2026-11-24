@@ -1,4 +1,55 @@
+# Dependencies
 node_modules/
+.pnp
+.pnp.js
+
+# Production and build outputs
 dist/
 build/
+.cache/
+
+# Environment configurations & local secrets (preserve .env.example)
 .env
+.env.*
+!.env.example
+!.env.*.example
+*.env
+.dev.vars
+.dev.vars.*
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
+
+# Temporary development artifacts, logs, and scratch files
+tmp/
+*.log
+api-dev.*.log
+web-dev.*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# TypeScript build caches
+*.tsbuildinfo
+.tsbuildinfo
+
+# Python build & cache artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+
+# Cloudflare Wrangler runtime artifacts
+.wrangler/
+
+# OS and editor metadata
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

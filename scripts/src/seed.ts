@@ -2,6 +2,160 @@ import bcrypt from "bcryptjs";
 import { db, pool } from "@workspace/db";
 import * as schema from "@workspace/db/schema";
 import { inArray } from "drizzle-orm";
+import { seedEnhancementModules } from "./seed-modules";
+
+type SeedLocation = typeof schema.locationsTable.$inferSelect;
+type SeedAlert = typeof schema.alertsTable.$inferInsert;
+
+/**
+ * Deterministic AI risk profile per risk level, used to backfill predictions
+ * for locations that do not have one yet (keeps seeding idempotent).
+ */
+const RISK_PROFILES = {
+  danger: {
+    probability: 82,
+    confidence: 89,
+    evacuationSuggested: true,
+    potentialTriggers: [
+      "Saturasi tanah melewati ambang kritis (>90%)",
+      "Pergerakan lereng terdeteksi 12mm dalam 6 jam terakhir",
+      "Curah hujan akumulatif >150mm dalam 24 jam",
+    ],
+    recommendedActions: [
+      "Aktifkan posko darurat tingkat kabupaten",
+      "Siapkan evakuasi warga dalam radius 300m",
+      "Tutup akses jalan yang berpotensi longsor",
+    ],
+    explanation:
+      "Model mendeteksi kombinasi faktor risiko tinggi: saturasi tanah di atas ambang kritis, pergerakan lereng signifikan, dan curah hujan akumulatif tinggi. Pola ini menyerupai kejadian longsor historis di wilayah serupa sehingga memerlukan tindakan mitigasi segera.",
+    historicalSimilarEvents: 6,
+  },
+  alert: {
+    probability: 58,
+    confidence: 81,
+    evacuationSuggested: false,
+    potentialTriggers: [
+      "Kadar air tanah mendekati batas aman",
+      "Kemiringan lereng meningkat dibanding baseline",
+      "Curah hujan moderat berkelanjutan",
+    ],
+    recommendedActions: [
+      "Tingkatkan frekuensi patroli lereng menjadi setiap 4 jam",
+      "Periksa dan bersihkan saluran drainase lereng",
+      "Sosialisasi jalur evakuasi kepada warga sekitar",
+    ],
+    explanation:
+      "Parameter tanah dan curah hujan menunjukkan peningkatan yang perlu diwaspadai. Belum mencapai ambang berbahaya, namun pemantauan intensif dan perbaikan drainase dianjurkan untuk menurunkan risiko.",
+    historicalSimilarEvents: 4,
+  },
+  watch: {
+    probability: 34,
+    confidence: 84,
+    evacuationSuggested: false,
+    potentialTriggers: [
+      "Curah hujan mingguan di atas rata-rata",
+      "Kelembapan tanah meningkat bertahap",
+    ],
+    recommendedActions: [
+      "Pantau data sensor setiap 30 menit",
+      "Verifikasi kalibrasi sensor tilt dan soil moisture",
+      "Siapkan jalur evakuasi sebagai tindakan pencegahan",
+    ],
+    explanation:
+      "Kondisi saat ini berada pada status waspada. Tidak ada indikator risiko signifikan, namun tren kelembapan tanah perlu terus dipantau melalui sistem peringatan dini.",
+    historicalSimilarEvents: 3,
+  },
+  normal: {
+    probability: 9,
+    confidence: 93,
+    evacuationSuggested: false,
+    potentialTriggers: [],
+    recommendedActions: [
+      "Lanjutkan pemantauan rutin",
+      "Jadwalkan kalibrasi sensor berkala",
+    ],
+    explanation:
+      "Seluruh parameter berada dalam rentang normal. Tidak ditemukan indikator risiko yang signifikan dan sistem beroperasi optimal.",
+    historicalSimilarEvents: 0,
+  },
+} as const;
+
+function buildGeneratedPredictions(targets: SeedLocation[]): schema.InsertPrediction[] {
+  return targets.map((location, index) => {
+    const profile = RISK_PROFILES[location.riskLevel];
+    return {
+      locationId: location.id,
+      riskLevel: location.riskLevel,
+      probability: Math.min(97, profile.probability + (index % 5)),
+      confidence: Math.max(60, profile.confidence - (index % 4)),
+      potentialTriggers: [...profile.potentialTriggers],
+      recommendedActions: [...profile.recommendedActions],
+      evacuationSuggested: profile.evacuationSuggested,
+      explanation: profile.explanation,
+      historicalSimilarEvents: profile.historicalSimilarEvents,
+      analyzedAt: new Date(),
+    };
+  });
+}
+
+/**
+ * Deterministic alert set for a location without any alerts yet. Mirrors the
+ * curated alert feed so newly added monitoring points are not empty.
+ */
+function buildGeneratedAlerts(targets: SeedLocation[], hoursAgo: (h: number) => Date): SeedAlert[] {
+  const alerts: SeedAlert[] = [];
+  targets.forEach((location, index) => {
+    const offset = index % 6;
+    if (location.riskLevel === "danger") {
+      alerts.push({
+        locationId: location.id,
+        alertType: "ground_movement",
+        priority: "critical",
+        status: "active",
+        message: `Pergerakan tanah terdeteksi melebihi ambang batas di ${location.name} — evakuasi segera disarankan`,
+        createdAt: hoursAgo(0.5 + offset),
+      });
+      alerts.push({
+        locationId: location.id,
+        alertType: "rainfall_warning",
+        priority: "high",
+        status: "active",
+        message: `Curah hujan ekstrem terukur di ${location.name} — potensi longsor sangat tinggi`,
+        createdAt: hoursAgo(1.5 + offset),
+      });
+    } else if (location.riskLevel === "alert") {
+      alerts.push({
+        locationId: location.id,
+        alertType: "threshold_exceeded",
+        priority: "high",
+        status: "active",
+        message: `Kadar air tanah di ${location.name} mendekati batas aman — perlu inspeksi lapangan`,
+        createdAt: hoursAgo(2 + offset),
+      });
+    } else if (location.riskLevel === "watch") {
+      alerts.push({
+        locationId: location.id,
+        alertType: "ground_movement",
+        priority: "medium",
+        status: "acknowledged",
+        message: `Kemiringan lereng di ${location.name} meningkat dari baseline — tim lapangan ditugaskan`,
+        createdAt: hoursAgo(4 + offset),
+        acknowledgedAt: hoursAgo(3 + offset),
+      });
+    } else {
+      alerts.push({
+        locationId: location.id,
+        alertType: "rainfall_warning",
+        priority: "low",
+        status: "resolved",
+        message: `Peringatan hujan lebat di ${location.name} berakhir — kondisi kembali normal`,
+        createdAt: hoursAgo(12 + offset),
+        resolvedAt: hoursAgo(10 + offset),
+      });
+    }
+  });
+  return alerts;
+}
 
 async function seed() {
   console.log("🌱 Starting seed...");
@@ -41,6 +195,45 @@ async function seed() {
     { name: "Cilacap Timur", district: "Cilacap", latitude: -7.7151, longitude: 109.1311, elevation: 48, riskLevel: "normal" as const, description: "Pesisir pantai, pantauan abrasi" },
     { name: "Purbalingga Barat", district: "Purbalingga", latitude: -7.3908, longitude: 109.3638, elevation: 195, riskLevel: "watch" as const, description: "Daerah transisi perbukitan dan dataran" },
     { name: "Banyumas Utara", district: "Banyumas", latitude: -7.3688, longitude: 109.2299, elevation: 310, riskLevel: "normal" as const, description: "Kawasan hutan lindung kaki Slamet" },
+
+    // ─── Ekspansi jaringan pemantauan nasional (26 titik tambahan) ─────────────
+    // Jawa Barat — lereng selatan dan kawasan vulkanik
+    { name: "Cianjur Selatan", district: "Cianjur", province: "West Java", latitude: -7.1442, longitude: 107.1536, elevation: 720, riskLevel: "danger" as const, description: "Zona sesar Cimandiri dengan riwayat longsor dan gempa destruktif" },
+    { name: "Sukabumi Utara", district: "Sukabumi", province: "West Java", latitude: -6.8147, longitude: 106.8044, elevation: 610, riskLevel: "alert" as const, description: "Lereng Gede-Pangrango, curah hujan sangat tinggi sepanjang tahun" },
+    { name: "Garut Selatan", district: "Garut", province: "West Java", latitude: -7.4208, longitude: 107.8136, elevation: 940, riskLevel: "alert" as const, description: "Lereng terjal vulkanik Papandayan dengan material piroklastik lepas" },
+    { name: "Bandung Barat", district: "Bandung Barat", province: "West Java", latitude: -6.8442, longitude: 107.4922, elevation: 1180, riskLevel: "watch" as const, description: "Cekungan Bandung utara, lereng Tangkuban Perahu" },
+    { name: "Tasikmalaya Selatan", district: "Tasikmalaya", province: "West Java", latitude: -7.5013, longitude: 108.1817, elevation: 520, riskLevel: "watch" as const, description: "Perbukitan selatan dengan batuan vulkanik lapuk" },
+    { name: "Bogor Puncak", district: "Bogor", province: "West Java", latitude: -6.7039, longitude: 106.9947, elevation: 1420, riskLevel: "alert" as const, description: "Kawasan Puncak dengan curah hujan ekstrem dan beban pembangunan tinggi" },
+
+    // Jawa Tengah / DIY — tambahan lereng vulkanik
+    { name: "Boyolali Merbabu", district: "Boyolali", latitude: -7.4586, longitude: 110.4397, elevation: 1560, riskLevel: "watch" as const, description: "Lereng timur Merbabu dengan jalur pendakian aktif" },
+    { name: "Semarang Ungaran", district: "Semarang", latitude: -7.1908, longitude: 110.3906, elevation: 640, riskLevel: "alert" as const, description: "Lereng Ungaran, permukiman padat di kaki lereng" },
+    { name: "Kulon Progo Menoreh", district: "Kulon Progo", latitude: -7.7439, longitude: 110.0961, elevation: 480, riskLevel: "watch" as const, description: "Perbukitan Menoreh, batuan breksi vulkanik dan tanah tebal" },
+    { name: "Klaten Merapi", district: "Klaten", latitude: -7.6586, longitude: 110.4822, elevation: 720, riskLevel: "alert" as const, description: "Sisi tenggara Merapi, kawasan aliran material piroklastik" },
+    { name: "Pati Pegunungan", district: "Pati", latitude: -6.7842, longitude: 110.9767, elevation: 340, riskLevel: "watch" as const, description: "Pegunungan Kendeng, batuan sedimen rawan pergerakan" },
+
+    // Jawa Timur — lereng vulkanik dan selatan
+    { name: "Malang Semeru", district: "Malang", province: "East Java", latitude: -8.0339, longitude: 112.8819, elevation: 1480, riskLevel: "danger" as const, description: "Lereng Semeru dengan lahar dan guguran material berulang" },
+    { name: "Blitar Kelud", district: "Blitar", province: "East Java", latitude: -7.9383, longitude: 112.3086, elevation: 890, riskLevel: "alert" as const, description: "Zona abu vulkanik Kelud, lereng curam dengan endapan lepas" },
+    { name: "Pacitan Selatan", district: "Pacitan", province: "East Java", latitude: -8.1986, longitude: 111.1086, elevation: 260, riskLevel: "watch" as const, description: "Perbukitan karst selatan, potensi runtuhan batuan" },
+    { name: "Nganjuk Wilis", district: "Nganjuk", province: "East Java", latitude: -7.7639, longitude: 111.8406, elevation: 1080, riskLevel: "alert" as const, description: "Lereng Gunung Wilis dengan riwayat longsor besar" },
+
+    // Bali & Nusa Tenggara
+    { name: "Karangasem Agung", district: "Karangasem", province: "Bali", latitude: -8.3422, longitude: 115.5078, elevation: 1120, riskLevel: "alert" as const, description: "Lereng Gunung Agung, curah hujan tinggi dan jalur evakuasi terbatas" },
+    { name: "Buleleng Kintamani", district: "Buleleng", province: "Bali", latitude: -8.2147, longitude: 115.1656, elevation: 1240, riskLevel: "watch" as const, description: "Kaldera Batur dengan lereng abu vulkanik tidak stabil" },
+    { name: "Lombok Rinjani", district: "Lombok Timur", province: "West Nusa Tenggara", latitude: -8.4117, longitude: 116.4575, elevation: 1380, riskLevel: "alert" as const, description: "Lereng Rinjani, material vulkanik lepas pasca gempa 2018" },
+    { name: "Flores Bajawa", district: "Ngada", province: "East Nusa Tenggara", latitude: -8.7925, longitude: 121.0417, elevation: 1120, riskLevel: "watch" as const, description: "Dataran tinggi Flores dengan tanah vulkanik tebal" },
+
+    // Sumatra
+    { name: "Agam Bukittinggi", district: "Agam", province: "West Sumatra", latitude: -0.3019, longitude: 100.3486, elevation: 1080, riskLevel: "danger" as const, description: "Lereng Marapi, zona sesar Sumatera dengan riwayat longsor fatal" },
+    { name: "Bukit Tinggi Sianok", district: "Agam", province: "West Sumatra", latitude: -0.2828, longitude: 100.3669, elevation: 940, riskLevel: "alert" as const, description: "Ngarai Sianok, dinding lembah curam dan labil" },
+    { name: "Toba Samosir", district: "Samosir", province: "North Sumatra", latitude: 2.6419, longitude: 98.8269, elevation: 1320, riskLevel: "watch" as const, description: "Tepi kaldera Toba dengan lereng tuf vulkanik" },
+
+    // Sulawesi, Kalimantan, Papua
+    { name: "Toraja Utara", district: "Toraja Utara", province: "South Sulawesi", latitude: -2.9125, longitude: 119.8556, elevation: 1180, riskLevel: "alert" as const, description: "Lereng batuan sedimen terlipat, curah hujan tinggi" },
+    { name: "Palu Lembah", district: "Sigi", province: "Central Sulawesi", latitude: -0.9386, longitude: 119.8906, elevation: 340, riskLevel: "danger" as const, description: "Zona sesar Palu-Koro, rentan likuifaksi dan longsor" },
+    { name: "Balikpapan Selatan", district: "Balikpapan", province: "East Kalimantan", latitude: -1.2769, longitude: 116.8306, elevation: 120, riskLevel: "watch" as const, description: "Perbukitan batu bara dengan lereng bekas tambang" },
+    { name: "Jayapura Cycloop", district: "Jayapura", province: "Papua", latitude: -2.5467, longitude: 140.5219, elevation: 620, riskLevel: "alert" as const, description: "Pegunungan Cycloop, lereng terjal dengan curah hujan ekstrem" },
   ];
 
   const existingLocations = await db
@@ -91,14 +284,17 @@ async function seed() {
 
   // ─── 4. MEASUREMENTS ─────────────────────────────────────────────────────────
   console.log("📈 Seeding measurements...");
-  const [existingMeasurement] = await db
-    .select({ id: schema.measurementsTable.id })
+  // Idempotent per sensor: only sensors without readings get a fresh 48h window,
+  // so newly added monitoring points are backfilled on re-run.
+  const existingMeasurementRows = await db
+    .select({ sensorId: schema.measurementsTable.sensorId })
     .from(schema.measurementsTable)
-    .limit(1);
+    .where(inArray(schema.measurementsTable.sensorId, sensors.map((sensor) => sensor.id)));
+  const measuredSensorIds = new Set(existingMeasurementRows.map((row) => row.sensorId));
   const measurementData: schema.InsertMeasurement[] = [];
-  if (!existingMeasurement) {
+  {
     const measurementNow = Date.now();
-    sensors.forEach((sensor, sensorIndex) => {
+    sensors.filter((sensor) => !measuredSensorIds.has(sensor.id)).forEach((sensor, sensorIndex) => {
       for (let hour = 47; hour >= 0; hour -= 1) {
         const phase = (47 - hour) / 5 + sensorIndex * 0.35;
         const rainfall = Math.max(0, 7 + Math.sin(phase) * 6 + (sensor.locationId % 4) * 2);
@@ -119,27 +315,61 @@ async function seed() {
         });
       }
     });
-    await db.insert(schema.measurementsTable).values(measurementData);
+    if (measurementData.length > 0) {
+      // Chunked because Postgres rejects statements with more than 65535 bind
+      // parameters (each measurement row contributes 12).
+      const MEASUREMENT_CHUNK = 500;
+      for (let i = 0; i < measurementData.length; i += MEASUREMENT_CHUNK) {
+        await db.insert(schema.measurementsTable).values(measurementData.slice(i, i + MEASUREMENT_CHUNK));
+      }
+    }
   }
   console.log(`  ✓ ${measurementData.length} measurements inserted`);
 
   // ─── 5. DEVICES ──────────────────────────────────────────────────────────────
   console.log("💻 Seeding devices...");
-  const deviceData: schema.InsertDevice[] = locations.map((loc, i) => ({
-    deviceId: `DEV-JATENG-${String(i + 1).padStart(3, "0")}`,
-    locationId: loc.id,
-    firmwareVersion: "v2.3.1",
-    status: i === 1 ? ("offline" as const) : ("online" as const),
-    batteryLevel: i === 1 ? 8 : Math.round(65 + Math.random() * 35),
-    signalStrength: i === 1 ? 0 : Math.round(72 + Math.random() * 28),
-    lastCommunication: i === 1 ? new Date(Date.now() - 4 * 3600 * 1000) : new Date(),
-    installationDate: new Date("2024-01-15"),
-    notes: i === 1 ? "Unit offline — sedang dalam perbaikan" : "Beroperasi normal",
-  }));
-  const devices = await db.insert(schema.devicesTable).values(deviceData).onConflictDoNothing().returning();
+  // One gateway device per location, seeded only for locations that lack one so
+  // re-running the seed backfills new monitoring points without duplicating rows.
+  const provinceCodes: Record<string, string> = {
+    "Central Java": "JTG",
+    "West Java": "JAB",
+    "East Java": "JTM",
+    "Bali": "BAL",
+    "West Nusa Tenggara": "NTB",
+    "East Nusa Tenggara": "NTT",
+    "West Sumatra": "SBR",
+    "North Sumatra": "SUM",
+    "South Sulawesi": "SNL",
+    "Central Sulawesi": "STG",
+    "East Kalimantan": "KTM",
+    "Papua": "PPA",
+  };
+  const existingDeviceRows = await db
+    .select({ locationId: schema.devicesTable.locationId })
+    .from(schema.devicesTable);
+  const locationsWithDevices = new Set(existingDeviceRows.map((row) => row.locationId));
+  const deviceData: schema.InsertDevice[] = locations
+    .filter((loc) => !locationsWithDevices.has(loc.id))
+    .map((loc) => {
+      const isOffline = loc.name === "Merapi Selatan";
+      return {
+        deviceId: `DEV-${provinceCodes[loc.province] ?? "IDN"}-${String(loc.id).padStart(3, "0")}`,
+        locationId: loc.id,
+        firmwareVersion: "v2.3.1",
+        status: isOffline ? ("offline" as const) : ("online" as const),
+        batteryLevel: isOffline ? 8 : Math.round(65 + Math.random() * 35),
+        signalStrength: isOffline ? 0 : Math.round(72 + Math.random() * 28),
+        lastCommunication: isOffline ? new Date(Date.now() - 4 * 3600 * 1000) : new Date(),
+        installationDate: new Date("2024-01-15"),
+        notes: isOffline ? "Unit offline — sedang dalam perbaikan" : "Beroperasi normal",
+      };
+    });
+  const devices = deviceData.length > 0
+    ? await db.insert(schema.devicesTable).values(deviceData).onConflictDoNothing().returning()
+    : [];
   console.log(`  ✓ ${devices.length} devices inserted`);
 
-  // ─── 5. ALERTS ───────────────────────────────────────────────────────────────
+  // ─── 6. ALERTS ───────────────────────────────────────────────────────────────
   console.log("🚨 Seeding alerts...");
   const now = new Date();
   const h = (hrs: number) => new Date(now.getTime() - hrs * 3600 * 1000);
@@ -161,13 +391,25 @@ async function seed() {
     { locationId: locations[3].id, alertType: "threshold_exceeded", priority: "medium", status: "resolved", message: "Debit sungai kembali normal setelah sempat meningkat 40%", createdAt: h(36), resolvedAt: h(34) },
     { locationId: locations[9].id, alertType: "sensor_offline", priority: "low", status: "resolved", message: "Sensor SNS-1001 kembali aktif — kabel power diganti tim lapangan", createdAt: h(48), resolvedAt: h(46) },
   ];
-  const [existingAlert] = await db.select({ id: schema.alertsTable.id }).from(schema.alertsTable).limit(1);
-  const alerts = existingAlert
-    ? []
-    : await db.insert(schema.alertsTable).values(alertData).returning();
+  // Curated alerts are only inserted when their location has none yet; locations
+  // without any alert receive a deterministic generated feed.
+  const existingAlertRows = await db
+    .select({ locationId: schema.alertsTable.locationId })
+    .from(schema.alertsTable);
+  const locationsWithAlerts = new Set(existingAlertRows.map((row) => row.locationId));
+  const alertsToInsert = [
+    ...alertData.filter((alert) => !locationsWithAlerts.has(alert.locationId)),
+    ...buildGeneratedAlerts(
+      locations.filter((loc) => !locationsWithAlerts.has(loc.id)),
+      h,
+    ),
+  ];
+  const alerts = alertsToInsert.length > 0
+    ? await db.insert(schema.alertsTable).values(alertsToInsert).returning()
+    : [];
   console.log(`  ✓ ${alerts.length} alerts inserted`);
 
-  // ─── 6. PREDICTIONS ──────────────────────────────────────────────────────────
+  // ─── 7. PREDICTIONS ──────────────────────────────────────────────────────────
   console.log("🧠 Seeding AI predictions...");
   const predictionData: schema.InsertPrediction[] = [
     {
@@ -243,13 +485,24 @@ async function seed() {
       analyzedAt: new Date(),
     },
   ];
-  const [existingPrediction] = await db.select({ id: schema.predictionsTable.id }).from(schema.predictionsTable).limit(1);
-  const predictions = existingPrediction
-    ? []
-    : await db.insert(schema.predictionsTable).values(predictionData).returning();
+  // Curated predictions are inserted only for locations without one; remaining
+  // locations get a deterministic profile derived from their risk level.
+  const existingPredictionRows = await db
+    .select({ locationId: schema.predictionsTable.locationId })
+    .from(schema.predictionsTable);
+  const locationsWithPredictions = new Set(existingPredictionRows.map((row) => row.locationId));
+  const predictionsToInsert = [
+    ...predictionData.filter((prediction) => !locationsWithPredictions.has(prediction.locationId)),
+    ...buildGeneratedPredictions(
+      locations.filter((loc) => !locationsWithPredictions.has(loc.id)),
+    ),
+  ];
+  const predictions = predictionsToInsert.length > 0
+    ? await db.insert(schema.predictionsTable).values(predictionsToInsert).returning()
+    : [];
   console.log(`  ✓ ${predictions.length} predictions inserted`);
 
-  // ─── 7. REPORTS ──────────────────────────────────────────────────────────────
+  // ─── 8. REPORTS ──────────────────────────────────────────────────────────────
   console.log("📄 Seeding reports...");
   const reportData: schema.InsertReport[] = [
     { reportType: "daily", title: "Laporan Harian — Pemantauan Lereng Jawa Tengah", period: "22 Juli 2026", status: "ready", locationId: null, generatedBy: users[0]?.id, completedAt: new Date() },
@@ -267,7 +520,7 @@ async function seed() {
     : await db.insert(schema.reportsTable).values(reportData).returning();
   console.log(`  ✓ ${reports.length} reports inserted`);
 
-  // ─── 8. AUDIT LOGS ───────────────────────────────────────────────────────────
+  // ─── 9. AUDIT LOGS ───────────────────────────────────────────────────────────
   console.log("📋 Seeding audit logs...");
   const auditData: (typeof schema.auditLogsTable.$inferInsert)[] = [
     { userId: users[0]?.id, action: "user.create", entityType: "user", entityId: users[1]?.id, details: JSON.stringify({ email: "operator1@landsafe.id", role: "operator" }), createdAt: h(48) },
@@ -287,6 +540,12 @@ async function seed() {
     : await db.insert(schema.auditLogsTable).values(auditData).returning();
   console.log(`  ✓ ${auditLogs.length} audit logs inserted`);
 
+  // ─── 10. ENHANCEMENT MODULES (risk, data hub, mitigation) ────────────────────
+  await seedEnhancementModules({
+    adminId: users[0]?.id,
+    operatorId: users[1]?.id,
+  });
+
   console.log("\n✅ Seed selesai! Ringkasan:");
   console.log(`   👤 Users      : ${users.length}`);
   console.log(`   📍 Locations  : ${locations.length}`);
@@ -297,7 +556,13 @@ async function seed() {
   console.log(`   📄 Reports    : ${reports.length}`);
   console.log(`   📋 Audit Logs : ${auditLogs.length}`);
   console.log("\n📌 Akun login tersedia:");
-
+  console.log("   admin@landsafe.id      — Administrator BNPB   (role: admin)");
+  console.log("   operator1@landsafe.id  — Budi Santoso         (role: operator)");
+  console.log("   operator2@landsafe.id  — Siti Rahayu          (role: operator)");
+  console.log("   publik@landsafe.id     — Warga Umum           (role: public)");
+  console.log("\n   Akun baru memakai kata sandi awal: password123");
+  console.log("   Ganti kata sandi admin: pnpm --filter @workspace/scripts run reset:admin-password");
+  console.log("   Catatan: akses publik (peta, peringatan, analisis AI) tidak memerlukan login.");
 }
 
 seed().catch((err) => {

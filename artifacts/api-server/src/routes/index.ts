@@ -7,10 +7,17 @@ import sensorsRouter from "./sensors";
 import measurementsRouter from "./measurements";
 import alertsRouter from "./alerts";
 import devicesRouter from "./devices";
+import liaRouter from "./lia";
 import aiRouter from "./ai";
 import reportsRouter from "./reports";
 import usersRouter from "./users";
 import auditRouter from "./audit";
+import riskRouter from "./risk";
+import scenariosRouter from "./scenarios";
+import dataHubRouter from "./datahub";
+import mitigationRouter from "./mitigation";
+import evacuationRouter from "./evacuation";
+import publicPortalRouter from "./public-portal";
 
 const router: IRouter = Router();
 
@@ -22,9 +29,16 @@ router.use(sensorsRouter);
 router.use(measurementsRouter);
 router.use(alertsRouter);
 router.use(devicesRouter);
+router.use(liaRouter);
 router.use(aiRouter);
 router.use(reportsRouter);
 router.use(usersRouter);
 router.use(auditRouter);
+router.use(riskRouter);
+router.use(scenariosRouter);
+router.use(dataHubRouter);
+router.use(mitigationRouter);
+router.use(evacuationRouter);
+router.use(publicPortalRouter);
 
 export default router;

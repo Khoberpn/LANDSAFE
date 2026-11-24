@@ -2,7 +2,6 @@ import { parsePositiveInt } from "../lib/validation";
 import { Router } from "express";
 import { db, predictionsTable, locationsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
-import { authenticate } from "../middlewares/auth";
 
 const router = Router();
 
@@ -22,7 +21,8 @@ function fmtPrediction(p: any, locationName: string) {
   };
 }
 
-router.get("/ai/risk-analysis", authenticate, async (_req, res): Promise<void> => {
+// Public read: AI risk analysis is exposed to anonymous visitors.
+router.get("/ai/risk-analysis", async (_req, res): Promise<void> => {
   const rows = await db
     .select({
       id: predictionsTable.id,
@@ -48,7 +48,8 @@ router.get("/ai/risk-analysis", authenticate, async (_req, res): Promise<void> =
   res.json(latest.map(r => fmtPrediction(r, r.locationName ?? "Unknown")));
 });
 
-router.get("/ai/risk-analysis/:locationId", authenticate, async (req, res): Promise<void> => {
+// Public read: AI risk analysis for a single location.
+router.get("/ai/risk-analysis/:locationId", async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.locationId) ? req.params.locationId[0] : req.params.locationId;
   const locationId = parsePositiveInt(raw);
   if (locationId === null) { res.status(400).json({ error: "Invalid location ID" }); return; }

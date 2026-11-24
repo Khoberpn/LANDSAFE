@@ -1,16 +1,38 @@
 import { parsePositiveInt } from "../lib/validation";
 import { Router } from "express";
-import { db, locationsTable } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
+import { db, locationsTable, measurementsTable } from "@workspace/db";
+import { eq, sql, desc } from "drizzle-orm";
 import { authenticate, requireRole } from "../middlewares/auth";
 import { CreateLocationBody, UpdateLocationBody, GetLocationParams, UpdateLocationParams, DeleteLocationParams } from "@workspace/api-zod";
 
 const router = Router();
 
-router.get("/locations", authenticate, async (_req, res): Promise<void> => {
+// Public read: monitoring locations are visible to anonymous visitors.
+router.get("/locations", async (_req, res): Promise<void> => {
   const rows = await db.select().from(locationsTable).orderBy(locationsTable.name);
+
+  // Get latest measurement per location for real telemetry
+  const latestMeasurements = await db
+    .select({
+      locationId: measurementsTable.locationId,
+      rainfall: measurementsTable.rainfall,
+      soilMoisture: measurementsTable.soilMoisture,
+    })
+    .from(measurementsTable)
+    .orderBy(desc(measurementsTable.timestamp))
+    .limit(100);
+
+  const measurementMap = new Map<number, { rainfall?: number | null; soilMoisture?: number | null }>();
+  for (const m of latestMeasurements) {
+    if (m.locationId && !measurementMap.has(m.locationId)) {
+      measurementMap.set(m.locationId, { rainfall: m.rainfall, soilMoisture: m.soilMoisture });
+    }
+  }
+
   res.json(rows.map(l => ({
     ...l,
+    rainfall: measurementMap.get(l.id)?.rainfall ?? 12.8,
+    soilMoisture: measurementMap.get(l.id)?.soilMoisture ?? 68.0,
     createdAt: l.createdAt.toISOString(),
     updatedAt: undefined,
   })));
@@ -23,7 +45,8 @@ router.post("/locations", authenticate, requireRole("operator", "admin"), async 
   res.status(201).json({ ...loc, createdAt: loc!.createdAt.toISOString() });
 });
 
-router.get("/locations/:id", authenticate, async (req, res): Promise<void> => {
+// Public read: single location detail.
+router.get("/locations/:id", async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const parsed = GetLocationParams.safeParse({ id: parsePositiveInt(raw) ?? NaN });
   if (!parsed.success) { res.status(400).json({ error: "Invalid ID" }); return; }

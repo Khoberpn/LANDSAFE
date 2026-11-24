@@ -1,6 +1,6 @@
 import React, { useRef, useState, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Sky, Stars, Environment, Text } from '@react-three/drei';
+import { OrbitControls, Stars, Environment, Text } from '@react-three/drei';
 import * as THREE from 'three';
 
 function Terrain({ riskLevel }: { riskLevel: number }) {
@@ -98,22 +98,23 @@ function Rain({ intensity }: { intensity: number }) {
   const dummy = useMemo(() => new THREE.Object3D(), []);
 
   const particles = useMemo(() => {
-    return Array.from({ length: count }, () => ({
-      x: (Math.random() - 0.5) * 40,
-      y: Math.random() * 20 + 5,
-      z: (Math.random() - 0.5) * 40,
-      speed: Math.random() * 0.2 + 0.3
-    }));
+    const temp = [];
+    for (let i = 0; i < count; i++) {
+      const x = (Math.random() - 0.5) * 40;
+      const y = Math.random() * 20;
+      const z = (Math.random() - 0.5) * 40;
+      const speed = 0.5 + Math.random() * 0.5;
+      temp.push({ x, y, z, speed });
+    }
+    return temp;
   }, [count]);
 
   useFrame(() => {
     if (!meshRef.current) return;
     particles.forEach((particle, i) => {
       particle.y -= particle.speed;
-      // slope interaction
-      const slopeHeight = (particle.z * 0.4) + Math.sin(particle.x * 0.2) * 2 + Math.cos(particle.z * 0.3) * 1.5;
-      if (particle.y < slopeHeight) {
-        particle.y = 25;
+      if (particle.y < 0) {
+        particle.y = 20;
       }
       dummy.position.set(particle.x, particle.y, particle.z);
       dummy.scale.set(0.05, 0.5, 0.05);
@@ -139,10 +140,9 @@ export default function DigitalTwin() {
   const [sensorActive, setSensorActive] = useState(true);
 
   return (
-    <div className="h-[calc(100vh-8rem)] rounded-xl border border-border overflow-hidden relative bg-card flex flex-col lg:flex-row">
-      
+    <div className="h-auto lg:h-[calc(100vh-8rem)] rounded-xl border border-border overflow-hidden relative bg-card flex flex-col lg:flex-row">
       {/* 3D Viewport */}
-      <div className="flex-1 relative bg-[#122b1d]">
+      <div className="w-full h-[280px] sm:h-[380px] lg:h-full lg:flex-1 relative bg-[#050B14]">
         <Canvas camera={{ position: [15, 10, 15], fov: 45 }} shadows>
           <color attach="background" args={['#050B14']} />
           <ambientLight intensity={0.2} />
@@ -168,15 +168,15 @@ export default function DigitalTwin() {
           />
         </Canvas>
 
-        <div className="absolute top-4 left-4 px-3 py-1.5 bg-card/80 backdrop-blur border border-border rounded font-mono text-xs text-muted-foreground uppercase">
+        <div className="absolute top-3 left-3 sm:top-4 sm:left-4 px-2.5 py-1 sm:px-3 sm:py-1.5 bg-card/80 backdrop-blur border border-border rounded font-mono text-[10px] sm:text-xs text-muted-foreground uppercase pointer-events-none">
           Sector 7G Topology Simulation
         </div>
       </div>
 
       {/* Control Panel */}
-      <div className="w-full lg:w-80 bg-card border-l border-border p-6 flex flex-col gap-6 shrink-0 overflow-y-auto">
+      <div className="w-full lg:w-80 bg-card border-t lg:border-t-0 lg:border-l border-border p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 shrink-0 overflow-y-auto">
         <div>
-          <h2 className="text-lg font-bold tracking-tight mb-1">Environment Controls</h2>
+          <h2 className="text-base sm:text-lg font-bold tracking-tight mb-1">Environment Controls</h2>
           <p className="text-xs text-muted-foreground font-mono">Real-time simulation parameters</p>
         </div>
 
@@ -184,37 +184,38 @@ export default function DigitalTwin() {
           <div className="space-y-2">
             <div className="flex justify-between text-xs font-mono text-muted-foreground">
               <span>Ground Saturation / Risk</span>
-              <span className={riskLevel > 0.7 ? 'text-destructive' : 'text-success'}>{(riskLevel * 100).toFixed(0)}%</span>
+              <span className={riskLevel > 0.7 ? 'text-destructive font-bold' : 'text-success font-bold'}>{(riskLevel * 100).toFixed(0)}%</span>
             </div>
             <input 
               type="range" 
               min="0" max="1" step="0.01"
               value={riskLevel}
               onChange={(e) => setRiskLevel(parseFloat(e.target.value))}
-              className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+              className="w-full h-3 sm:h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
             />
           </div>
 
           <div className="space-y-2">
             <div className="flex justify-between text-xs font-mono text-muted-foreground">
               <span>Precipitation Volume</span>
-              <span className="text-info">{(rainIntensity * 100).toFixed(0)}mm/hr</span>
+              <span className="text-info font-bold">{(rainIntensity * 100).toFixed(0)}mm/hr</span>
             </div>
             <input 
               type="range" 
               min="0" max="1" step="0.01"
               value={rainIntensity}
               onChange={(e) => setRainIntensity(parseFloat(e.target.value))}
-              className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-info"
+              className="w-full h-3 sm:h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-info"
             />
           </div>
 
-          <div className="pt-4 border-t border-border">
+          <div className="pt-3 sm:pt-4 border-t border-border">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Sensor Array Status</span>
+              <span className="text-xs sm:text-sm font-medium">Sensor Array Status</span>
               <button 
+                type="button"
                 onClick={() => setSensorActive(!sensorActive)}
-                className={`px-3 py-1 text-xs font-mono rounded border ${
+                className={`min-h-[36px] px-3 py-1.5 text-xs font-mono rounded border font-bold transition-colors ${
                   sensorActive ? 'bg-success/20 text-success border-success/30' : 'bg-destructive/20 text-destructive border-destructive/30'
                 }`}
               >
@@ -224,15 +225,15 @@ export default function DigitalTwin() {
           </div>
         </div>
 
-        <div className="mt-auto pt-6 border-t border-border">
-          <div className="bg-background rounded border border-border p-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">AI Assessment</h3>
-            <p className="text-sm">
+        <div className="mt-auto pt-4 sm:pt-6 border-t border-border">
+          <div className="bg-background rounded-lg border border-border p-3">
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">AI Assessment</h3>
+            <p className="text-xs sm:text-sm leading-relaxed">
               {riskLevel > 0.7 && rainIntensity > 0.6 
-                ? <span className="text-destructive">Critical instability detected. High probability of mass wasting event within 4 hours. Evacuation recommended.</span>
+                ? <span className="text-destructive font-semibold">Critical instability detected. High probability of mass wasting event within 4 hours. Evacuation recommended.</span>
                 : riskLevel > 0.4 
-                  ? <span className="text-warning">Moderate saturation. Monitor inclinometer variance.</span>
-                  : <span className="text-success">Slopes stable. Normal parameters.</span>
+                  ? <span className="text-warning font-medium">Moderate saturation. Monitor inclinometer variance.</span>
+                  : <span className="text-success font-medium">Slopes stable. Normal parameters.</span>
               }
             </p>
           </div>

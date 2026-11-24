@@ -6,6 +6,7 @@
   "scripts": {
     "hello": "tsx ./src/hello.ts",
     "seed": "node --env-file=../artifacts/api-server/.env --import tsx ./src/seed.ts",
+    "reset:admin-password": "node --env-file=../artifacts/api-server/.env --import tsx ./src/reset-admin-password.ts",
     "test": "node --import tsx --test ./src/risk-prediction/domain.test.ts ./src/risk-prediction/runtime.test.ts ./src/security.test.ts",
     "ml:train": "python ./ml/train_bootstrap_model.py",
     "predict:risk": "node --env-file=../artifacts/api-server/.env --import tsx ./src/predict-risk.ts",

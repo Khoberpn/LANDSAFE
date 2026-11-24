@@ -7,3 +7,7 @@ export * from "./devices";
 export * from "./reports";
 export * from "./audit";
 export * from "./prediction";
+export * from "./modules";
+export * from "./evacuation";
+export * from "./lia";
+export * from "./integrations";

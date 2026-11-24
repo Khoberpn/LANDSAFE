@@ -15,6 +15,10 @@ export default defineConfig({
     "./src/schema/reports.ts",
     "./src/schema/audit.ts",
     "./src/schema/prediction.ts",
+    "./src/schema/modules.ts",
+    "./src/schema/evacuation.ts",
+    "./src/schema/lia.ts",
+    "./src/schema/integrations.ts",
   ],
   dialect: "postgresql",
   dbCredentials: {

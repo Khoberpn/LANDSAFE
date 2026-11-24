@@ -64,6 +64,19 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
   }
 }
 
+/**
+ * Public-safe authentication: anonymous requests continue without a user,
+ * while a supplied token is fully verified. An invalid/expired token is
+ * rejected instead of silently downgrading the session.
+ */
+export function optionalAuthenticate(req: Request, res: Response, next: NextFunction): void {
+  if (!req.headers.authorization) {
+    next();
+    return;
+  }
+  void authenticate(req, res, next);
+}
+
 export function requireRole(...roles: Array<"public" | "operator" | "admin">) {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
