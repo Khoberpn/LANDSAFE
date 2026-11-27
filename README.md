@@ -150,6 +150,8 @@ LANDSAFE should not silently treat missing, stale, incomplete, or unverified dat
 # Clone the repository
  git clone https://github.com/Khoberpn/LANDSAFE
 
+cd LANDSAFE
+
 # Install JavaScript dependencies
  pnpm install
 ```
